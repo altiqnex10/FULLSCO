@@ -1,55 +1,48 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlusCircle, Edit, Trash2, RefreshCw, Check, X, Menu, FileText, Eye, Archive } from 'lucide-react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useLocation } from 'wouter';
-import { useAuth } from '@/hooks/use-auth';
-import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link, useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
+import { formatDate, cn } from "@/lib/utils";
+import Sidebar from "@/components/admin/sidebar";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import {
+  PlusCircle,
+  Search,
+  Edit,
+  Trash2,
+  ExternalLink,
+  Eye,
+  Menu,
+  CheckCircle,
+  XCircle,
+  RefreshCw,
+  ArrowUpDown,
+  FileText
+} from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import Sidebar from '@/components/admin/sidebar';
-
-// محرر النصوص الغني (يمكن تبديله بأي محرر نصوص غني متوافق مع React)
-// في المستقبل يمكن استخدام CKEditor أو TinyMCE أو Quill
-const RichTextEditor = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
-  return (
-    <Textarea
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="min-h-[300px] font-mono"
-      dir="rtl"
-    />
-  );
-};
-
-// زودج سكيما للتحقق من صحة البيانات
-const pageSchema = z.object({
-  title: z.string().min(1, 'العنوان مطلوب'),
-  slug: z.string().min(1, 'المسار المختصر مطلوب').regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'المسار المختصر يجب أن يحتوي على أحرف صغيرة وأرقام وشرطات فقط'),
-  content: z.string().min(1, 'المحتوى مطلوب'),
-  metaTitle: z.string().optional(),
-  metaDescription: z.string().optional(),
-  isPublished: z.boolean().default(true),
-  // خيارات العرض في الهيدر والفوتر تتم إدارتها عبر القوائم فقط
-});
-
-type PageFormValues = z.infer<typeof pageSchema>;
-
-// واجهة للصفحة
+// تعريف واجهة الصفحة
 interface Page {
   id: number;
   title: string;
@@ -58,40 +51,48 @@ interface Page {
   metaTitle?: string;
   metaDescription?: string;
   isPublished: boolean;
-  showInFooter?: boolean; // ستتم إزالتها لاحقًا من النظام - قد تأتي من الخادم حاليًا
-  showInHeader?: boolean; // ستتم إزالتها لاحقًا من النظام - قد تأتي من الخادم حاليًا
+  showInFooter?: boolean;
+  showInHeader?: boolean;
   createdAt: string;
   updatedAt: string;
+  imageUrl?: string;
 }
 
-export default function PagesManagementPage() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
-  const [selectedPage, setSelectedPage] = useState<Page | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('all');
+const AdminPages = () => {
   const { isLoading: authLoading, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
+  const [deleteId, setDeleteId] = useState<number | undefined>(undefined);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedPage, setSelectedPage] = useState<Page | null>(null);
+  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sortField, setSortField] = useState<string>("updatedAt");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   // التحقق من تسجيل الدخول
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate('/admin/login');
+      navigate("/admin/login");
     }
   }, [authLoading, isAuthenticated, navigate]);
 
-  // استلام الصفحات من الخادم
-  const { data: pages, isLoading, isError, refetch } = useQuery<Page[]>({
-    queryKey: ['/api/admin/pages'],
+  // جلب الصفحات
+  const {
+    data: pages,
+    isLoading,
+    isError,
+    refetch
+  } = useQuery<Page[]>({
+    queryKey: ["/api/admin/pages"],
     queryFn: async () => {
       try {
         const response = await fetch('/api/admin/pages', {
-          credentials: 'include' // لإرسال معلومات الجلسة
+          credentials: 'include'
         });
         
         if (!response.ok) {
@@ -99,97 +100,13 @@ export default function PagesManagementPage() {
           throw new Error(errorData.message || 'فشل في استلام الصفحات');
         }
         
-        return response.json();
+        return await response.json();
       } catch (error) {
         console.error('Error fetching pages:', error);
         throw error;
       }
     },
-    enabled: isAuthenticated
-  });
-
-  // فلترة الصفحات حسب التبويب النشط
-  const filteredPages = pages?.filter(page => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'published') return page.isPublished;
-    if (activeTab === 'drafts') return !page.isPublished;
-    // تم إزالة خيارات العرض في الهيدر والفوتر لتتم إدارتها عبر القوائم فقط
-    return true;
-  }) || [];
-
-  // إضافة صفحة جديدة
-  const addMutation = useMutation({
-    mutationFn: async (newPage: PageFormValues) => {
-      // تحويل featuredImage إلى imageUrl كما يتوقع الخادم
-      const payload = {
-        ...newPage,
-        imageUrl: newPage.featuredImage, // تحويل featuredImage إلى imageUrl
-      };
-      
-      console.log("بيانات الصفحة الجديدة للإرسال:", payload);
-      
-      const response = await fetch('/api/pages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'فشل في إضافة الصفحة');
-      }
-      
-      return response.json();
-    },
-    onSuccess: (newPage) => {
-      // تحديث ذاكرة التخزين المؤقت
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/pages'] });
-      toast({ title: 'تم الإضافة بنجاح', description: 'تمت إضافة الصفحة الجديدة بنجاح' });
-      setIsAddDialogOpen(false);
-    },
-    onError: (error) => {
-      toast({ title: 'خطأ!', description: `فشل في إضافة الصفحة: ${error.message}`, variant: 'destructive' });
-    }
-  });
-
-  // تعديل صفحة
-  const updateMutation = useMutation({
-    mutationFn: async (updatedPage: PageFormValues & { id: number }) => {
-      const { id, ...pageData } = updatedPage;
-      
-      // تحويل featuredImage إلى imageUrl كما يتوقع الخادم
-      const payload = {
-        ...pageData,
-        imageUrl: pageData.featuredImage, // تحويل featuredImage إلى imageUrl
-      };
-      
-      console.log("بيانات تحديث الصفحة للإرسال:", payload);
-      
-      const response = await fetch(`/api/pages/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'فشل في تحديث الصفحة');
-      }
-      
-      return response.json();
-    },
-    onSuccess: () => {
-      // تحديث ذاكرة التخزين المؤقت
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/pages'] });
-      toast({ title: 'تم التحديث بنجاح', description: 'تم تحديث الصفحة بنجاح' });
-      setIsEditDialogOpen(false);
-      setSelectedPage(null);
-    },
-    onError: (error) => {
-      toast({ title: 'خطأ!', description: `فشل في تحديث الصفحة: ${error.message}`, variant: 'destructive' });
-    }
+    enabled: isAuthenticated,
   });
 
   // حذف صفحة
@@ -208,15 +125,21 @@ export default function PagesManagementPage() {
       return { success: true, id };
     },
     onSuccess: () => {
-      // تحديث ذاكرة التخزين المؤقت
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/pages'] });
-      toast({ title: 'تم الحذف بنجاح', description: 'تم حذف الصفحة بنجاح' });
-      setIsDeleteDialogOpen(false);
+      toast({
+        title: "تم الحذف بنجاح",
+        description: "تم حذف الصفحة بنجاح",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/pages"] });
+      setShowDeleteDialog(false);
       setSelectedPage(null);
     },
     onError: (error) => {
-      toast({ title: 'خطأ!', description: `فشل في حذف الصفحة: ${error.message}`, variant: 'destructive' });
-    }
+      toast({
+        title: "خطأ!",
+        description: `فشل في حذف الصفحة: ${error.message}`,
+        variant: "destructive",
+      });
+    },
   });
 
   // تغيير حالة النشر للصفحة
@@ -237,163 +160,112 @@ export default function PagesManagementPage() {
       return await response.json();
     },
     onSuccess: (updatedPage: Page) => {
-      // تحديث ذاكرة التخزين المؤقت
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/pages'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/pages"] });
       toast({ 
-        title: updatedPage.isPublished ? 'تم النشر بنجاح' : 'تم إلغاء النشر', 
-        description: updatedPage.isPublished ? 'الصفحة الآن منشورة ومتاحة للزوار' : 'الصفحة الآن غير منشورة' 
+        title: updatedPage.isPublished ? "تم النشر بنجاح" : "تم إلغاء النشر", 
+        description: updatedPage.isPublished ? "الصفحة الآن منشورة ومتاحة للزوار" : "الصفحة الآن غير منشورة" 
       });
     },
     onError: (error) => {
-      toast({ title: 'خطأ!', description: `فشل في تغيير حالة النشر: ${error.message}`, variant: 'destructive' });
-    }
-  });
-
-  // نموذج إضافة صفحة جديدة
-  const addForm = useForm<PageFormValues>({
-    resolver: zodResolver(pageSchema),
-    defaultValues: {
-      title: '',
-      slug: '',
-      content: '',
-      metaTitle: '',
-      metaDescription: '',
-      isPublished: true,
-      // تم إزالة خيارات العرض في الهيدر والفوتر لتتم إدارتها عبر القوائم فقط
+      toast({ 
+        title: "خطأ!", 
+        description: `فشل في تغيير حالة النشر: ${error.message}`, 
+        variant: "destructive" 
+      });
     },
   });
 
-  // نموذج تعديل صفحة
-  const editForm = useForm<PageFormValues>({
-    resolver: zodResolver(pageSchema),
-    defaultValues: {
-      title: selectedPage?.title || '',
-      slug: selectedPage?.slug || '',
-      content: selectedPage?.content || '',
-      metaTitle: selectedPage?.metaTitle || '',
-      metaDescription: selectedPage?.metaDescription || '',
-      isPublished: selectedPage?.isPublished || true,
-      // تم إزالة خيارات العرض في الهيدر والفوتر لتتم إدارتها عبر القوائم فقط
-    },
-  });
-
-  // تحديث نموذج التعديل عند تغيير الصفحة المحددة
-  useEffect(() => {
-    if (selectedPage) {
-      editForm.reset({
-        title: selectedPage.title,
-        slug: selectedPage.slug,
-        content: selectedPage.content,
-        metaTitle: selectedPage.metaTitle || '',
-        metaDescription: selectedPage.metaDescription || '',
-        isPublished: selectedPage.isPublished,
-        // تم إزالة خيارات العرض في الهيدر والفوتر لتتم إدارتها عبر القوائم فقط
-      });
-    }
-  }, [selectedPage, editForm]);
-
-  // إعادة ضبط نموذج الإضافة عند فتح نافذة الإضافة
-  useEffect(() => {
-    if (isAddDialogOpen) {
-      addForm.reset({
-        title: '',
-        slug: '',
-        content: '',
-        metaTitle: '',
-        metaDescription: '',
-        isPublished: true,
-        // تم إزالة خيارات العرض في الهيدر والفوتر لتتم إدارتها عبر القوائم فقط
-      });
-    }
-  }, [isAddDialogOpen, addForm]);
-
-  // معالجة حدث إرسال نموذج الإضافة
-  const onSubmitAdd = (data: PageFormValues) => {
-    addMutation.mutate(data);
-  };
-
-  // معالجة حدث إرسال نموذج التعديل
-  const onSubmitEdit = (data: PageFormValues) => {
-    if (selectedPage) {
-      updateMutation.mutate({ ...data, id: selectedPage.id });
-    }
-  };
-
-  // تحضير الصفحة للتعديل
-  const handleEdit = (page: Page) => {
+  // إعداد الصفحة للحذف
+  const handleDeleteClick = (page: Page) => {
     setSelectedPage(page);
-    setIsEditDialogOpen(true);
-  };
-
-  // تحضير الصفحة للحذف
-  const handleDelete = (page: Page) => {
-    setSelectedPage(page);
-    setIsDeleteDialogOpen(true);
-  };
-
-  // تحضير الصفحة للمعاينة
-  const handlePreview = (page: Page) => {
-    setSelectedPage(page);
-    setIsPreviewDialogOpen(true);
-  };
-
-  // تغيير حالة النشر
-  const togglePublish = (page: Page) => {
-    togglePublishMutation.mutate({ id: page.id, isPublished: !page.isPublished });
+    setDeleteId(page.id);
+    setShowDeleteDialog(true);
   };
 
   // تأكيد الحذف
   const confirmDelete = () => {
-    if (selectedPage) {
-      deleteMutation.mutate(selectedPage.id);
+    if (deleteId) {
+      deleteMutation.mutate(deleteId);
+    }
+  };
+  
+  // تغيير حالة النشر
+  const togglePublish = (page: Page) => {
+    togglePublishMutation.mutate({ id: page.id, isPublished: !page.isPublished });
+  };
+  
+  // معاينة الصفحة
+  const handlePreview = (page: Page) => {
+    setSelectedPage(page);
+    setIsPreviewDialogOpen(true);
+  };
+  
+  // تعديل الصفحة
+  const handleEdit = (page: Page) => {
+    navigate(`/admin/pages/edit/${page.id}`);
+  };
+
+  // فرز الصفحات
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
     }
   };
 
-  // إنتاج slug من العنوان
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, '-')
-      .replace(/[^\w\-]+/g, '')
-      .replace(/\-\-+/g, '-');
-  };
+  // تصفية وفرز الصفحات
+  const filteredAndSortedPages = Array.isArray(pages) 
+    ? pages
+        // تصفية حسب مصطلح البحث
+        .filter(page => 
+          page.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+          page.slug?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          page.content?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        // تصفية حسب التبويب النشط
+        .filter(page => {
+          if (activeTab === 'all') return true;
+          if (activeTab === 'published') return page.isPublished;
+          if (activeTab === 'drafts') return !page.isPublished;
+          return true;
+        })
+        // فرز حسب الحقل والاتجاه المحددين
+        .sort((a, b) => {
+          let aValue: any = (a as any)[sortField];
+          let bValue: any = (b as any)[sortField];
+          
+          // التعامل مع القيم النصية والتواريخ والأرقام
+          if (typeof aValue === 'string' && typeof bValue === 'string') {
+            if (sortField === 'createdAt' || sortField === 'updatedAt') {
+              aValue = new Date(aValue).getTime();
+              bValue = new Date(bValue).getTime();
+            } else {
+              aValue = aValue.toLowerCase();
+              bValue = bValue.toLowerCase();
+            }
+          }
+          
+          // الترتيب التصاعدي أو التنازلي
+          if (sortDirection === 'asc') {
+            return aValue > bValue ? 1 : -1;
+          } else {
+            return aValue < bValue ? 1 : -1;
+          }
+        })
+    : [];
 
-  // معالجة تلقائية لإنشاء slug عند كتابة العنوان في نموذج الإضافة
-  const handleTitleChangeAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const title = e.target.value;
-    addForm.setValue('title', title);
+  // حساب عدد الصفحات المنشورة والمسودات
+  const publishedPages = Array.isArray(pages) 
+    ? pages.filter(page => page.isPublished === true)
+    : [];
     
-    // إذا لم يتم تعديل الـ slug يدويًا، قم بتحديثه تلقائيًا
-    if (!addForm.getValues('slug') || addForm.getValues('slug') === generateSlug(addForm.getValues('title'))) {
-      const slug = generateSlug(title);
-      addForm.setValue('slug', slug);
-    }
-    
-    // إذا لم يتم تعديل عنوان ميتا، قم بتعيينه إلى العنوان + اسم الموقع
-    if (!addForm.getValues('metaTitle')) {
-      addForm.setValue('metaTitle', title ? `${title} | FULLSCO` : '');
-    }
-  };
+  const draftPages = Array.isArray(pages) 
+    ? pages.filter(page => page.isPublished !== true)
+    : [];
 
-  // معالجة تلقائية لإنشاء slug عند كتابة العنوان في نموذج التعديل
-  const handleTitleChangeEdit = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const title = e.target.value;
-    editForm.setValue('title', title);
-    
-    // إذا لم يتم تعديل الـ slug يدويًا، قم بتحديثه تلقائيًا
-    if (!editForm.getValues('slug') || editForm.getValues('slug') === generateSlug(editForm.getValues('title'))) {
-      const slug = generateSlug(title);
-      editForm.setValue('slug', slug);
-    }
-    
-    // إذا لم يتم تعديل عنوان ميتا، قم بتعيينه إلى العنوان + اسم الموقع
-    if (!editForm.getValues('metaTitle')) {
-      editForm.setValue('metaTitle', title ? `${title} | FULLSCO` : '');
-    }
-  };
-
-  // في حالة تحميل بيانات المصادقة أو عدم تسجيل الدخول
+  // عرض رسالة التحميل
   if (authLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -440,501 +312,266 @@ export default function PagesManagementPage() {
                 <RefreshCw className="ml-2 h-4 w-4" />
                 تحديث
               </Button>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <PlusCircle className="ml-2 h-4 w-4" />
-                    إضافة صفحة
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>إضافة صفحة جديدة</DialogTitle>
-                    <DialogDescription>
-                      أضف صفحة ثابتة جديدة للموقع. اضغط على حفظ عند الانتهاء.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <Form {...addForm}>
-                    <form onSubmit={addForm.handleSubmit(onSubmitAdd)} className="space-y-4">
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <FormField
-                          control={addForm.control}
-                          name="title"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>عنوان الصفحة</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  {...field} 
-                                  onChange={handleTitleChangeAdd}
-                                  placeholder="مثال: من نحن" 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={addForm.control}
-                          name="slug"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>المسار المختصر (Slug)</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="مثال: about" dir="ltr" />
-                              </FormControl>
-                              <FormDescription>
-                                سيستخدم هذا في عنوان URL. يجب أن يحتوي على أحرف صغيرة وأرقام وشرطات فقط.
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <FormField
-                        control={addForm.control}
-                        name="content"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>محتوى الصفحة</FormLabel>
-                            <FormControl>
-                              <RichTextEditor
-                                value={field.value}
-                                onChange={field.onChange}
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              يمكنك استخدام HTML لتنسيق المحتوى
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <FormField
-                          control={addForm.control}
-                          name="metaTitle"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>عنوان ميتا (SEO)</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="مثال: من نحن | FULLSCO" />
-                              </FormControl>
-                              <FormDescription>
-                                عنوان الصفحة لمحركات البحث
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={addForm.control}
-                          name="metaDescription"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>وصف ميتا (SEO)</FormLabel>
-                              <FormControl>
-                                <Textarea {...field} placeholder="وصف قصير للصفحة لمحركات البحث" />
-                              </FormControl>
-                              <FormDescription>
-                                وصف الصفحة الذي سيظهر في نتائج البحث
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="grid md:grid-cols-1 gap-4">
-                        <FormField
-                          control={addForm.control}
-                          name="isPublished"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                              <div className="space-y-0.5">
-                                <FormLabel>نشر الصفحة</FormLabel>
-                                <FormDescription>
-                                  هل هذه الصفحة منشورة؟
-                                </FormDescription>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        {/* تم إزالة خيارات العرض في الهيدر والفوتر لتتم إدارتها عبر القوائم فقط */}
-                      </div>
-                      <DialogFooter>
-                        <Button type="submit" disabled={addMutation.isPending}>
-                          {addMutation.isPending ? (
-                            <>
-                              <RefreshCw className="ml-2 h-4 w-4 animate-spin" />
-                              جاري الحفظ...
-                            </>
-                          ) : (
-                            <>
-                              <Check className="ml-2 h-4 w-4" />
-                              حفظ
-                            </>
-                          )}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
+              <Link href="/admin/pages/create">
+                <Button>
+                  <PlusCircle className="ml-2 h-4 w-4" />
+                  إضافة صفحة
+                </Button>
+              </Link>
             </div>
           </div>
-
-          <Tabs defaultValue="all" onValueChange={setActiveTab}>
-            <TabsList className="mb-6">
-              <TabsTrigger value="all">جميع الصفحات</TabsTrigger>
-              <TabsTrigger value="published">منشورة</TabsTrigger>
-              <TabsTrigger value="drafts">مسودات</TabsTrigger>
-              {/* تم إزالة خيارات العرض في الهيدر والفوتر لتتم إدارتها عبر القوائم فقط */}
-            </TabsList>
+          
+          {/* تبويبات التصفية وحقل البحث */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <Tabs 
+              defaultValue="all" 
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full md:w-auto"
+            >
+              <TabsList className="grid grid-cols-3 w-full md:w-auto">
+                <TabsTrigger value="all">
+                  جميع الصفحات
+                  <Badge variant="secondary" className="mr-2">
+                    {pages?.length || 0}
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger value="published">
+                  منشورة
+                  <Badge variant="secondary" className="mr-2">
+                    {publishedPages.length}
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger value="drafts">
+                  مسودات
+                  <Badge variant="secondary" className="mr-2">
+                    {draftPages.length}
+                  </Badge>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
             
-            <Card className="shadow-soft">
-              <CardHeader>
-                <CardTitle>
-                  {activeTab === 'all' && 'جميع الصفحات'}
-                  {activeTab === 'published' && 'الصفحات المنشورة'}
-                  {activeTab === 'drafts' && 'المسودات'}
-                  {/* تم إزالة خيارات العرض في الهيدر والفوتر لتتم إدارتها عبر القوائم فقط */}
-                </CardTitle>
-                <CardDescription>
-                  {activeTab === 'all' && 'قائمة بجميع الصفحات الثابتة في الموقع'}
-                  {activeTab === 'published' && 'الصفحات المنشورة والمتاحة للزوار'}
-                  {activeTab === 'drafts' && 'المسودات غير المنشورة (صفحات قيد الإنشاء)'}
-                  {/* تم إزالة خيارات العرض في الهيدر والفوتر لتتم إدارتها عبر القوائم فقط */}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="flex justify-center items-center h-32">
-                    <RefreshCw className="h-6 w-6 animate-spin" />
-                    <span className="mr-2">جاري التحميل...</span>
-                  </div>
-                ) : isError ? (
-                  <div className="text-center py-4 text-red-500">
-                    <p>حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى.</p>
-                    <Button variant="outline" onClick={() => refetch()} className="mt-2">
-                      إعادة المحاولة
-                    </Button>
-                  </div>
-                ) : filteredPages.length === 0 ? (
-                  <div className="text-center py-6 text-muted-foreground">
-                    <p>لا توجد صفحات في هذه الفئة حاليًا.</p>
-                    <Button variant="outline" onClick={() => setIsAddDialogOpen(true)} className="mt-2">
-                      إضافة صفحة جديدة
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="overflow-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-10 text-right">الرقم</TableHead>
-                          <TableHead className="text-right">العنوان</TableHead>
-                          <TableHead className="text-right">المسار</TableHead>
-                          <TableHead className="text-right w-[120px]">الحالة</TableHead>
-                          <TableHead className="text-right">آخر تحديث</TableHead>
-                          <TableHead className="text-left w-[180px]">الإجراءات</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredPages.map((page) => (
-                          <TableRow key={page.id} className={!page.isPublished ? 'opacity-60' : ''}>
-                            <TableCell>{page.id}</TableCell>
-                            <TableCell className="font-medium">{page.title}</TableCell>
-                            <TableCell dir="ltr">/{page.slug}</TableCell>
-                            <TableCell>
-                              <div className="flex flex-col gap-1">
-                                <span className={`px-2 py-1 rounded-full text-xs ${page.isPublished ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
-                                  {page.isPublished ? 'منشورة' : 'مسودة'}
-                                </span>
-                                {page.showInFooter && (
-                                  <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                                    في التذييل
-                                  </span>
-                                )}
-                                {page.showInHeader && (
-                                  <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
-                                    في الهيدر
-                                  </span>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell dir="ltr" className="text-sm text-muted-foreground">
-                              {new Date(page.updatedAt).toLocaleDateString('ar-SA')}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex justify-end gap-1">
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost"
-                                  onClick={() => handlePreview(page)}
-                                  title="معاينة"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost"
-                                  onClick={() => togglePublish(page)}
-                                  title={page.isPublished ? 'إلغاء النشر' : 'نشر'}
-                                >
-                                  {page.isPublished ? (
-                                    <Archive className="h-4 w-4" />
-                                  ) : (
-                                    <FileText className="h-4 w-4" />
-                                  )}
-                                </Button>
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost"
-                                  onClick={() => handleEdit(page)}
-                                  title="تعديل"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost"
-                                  className="text-red-500"
-                                  onClick={() => handleDelete(page)}
-                                  title="حذف"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </Tabs>
-
-          {/* نافذة تعديل الصفحة */}
-          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-            <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>تعديل الصفحة</DialogTitle>
-                <DialogDescription>
-                  قم بتعديل محتوى الصفحة وإعداداتها. اضغط على حفظ عند الانتهاء.
-                </DialogDescription>
-              </DialogHeader>
-              {selectedPage && (
-                <Form {...editForm}>
-                  <form onSubmit={editForm.handleSubmit(onSubmitEdit)} className="space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <FormField
-                        control={editForm.control}
-                        name="title"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>عنوان الصفحة</FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field} 
-                                onChange={handleTitleChangeEdit}
-                                placeholder="مثال: من نحن" 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={editForm.control}
-                        name="slug"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>المسار المختصر (Slug)</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="مثال: about" dir="ltr" />
-                            </FormControl>
-                            <FormDescription>
-                              سيستخدم هذا في عنوان URL. يجب أن يحتوي على أحرف صغيرة وأرقام وشرطات فقط.
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <FormField
-                      control={editForm.control}
-                      name="content"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>محتوى الصفحة</FormLabel>
-                          <FormControl>
-                            <RichTextEditor
-                              value={field.value}
-                              onChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            يمكنك استخدام HTML لتنسيق المحتوى
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <FormField
-                        control={editForm.control}
-                        name="metaTitle"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>عنوان ميتا (SEO)</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="مثال: من نحن | FULLSCO" />
-                            </FormControl>
-                            <FormDescription>
-                              عنوان الصفحة لمحركات البحث
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={editForm.control}
-                        name="metaDescription"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>وصف ميتا (SEO)</FormLabel>
-                            <FormControl>
-                              <Textarea {...field} placeholder="وصف قصير للصفحة لمحركات البحث" />
-                            </FormControl>
-                            <FormDescription>
-                              وصف الصفحة الذي سيظهر في نتائج البحث
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="grid md:grid-cols-1 gap-4">
-                      <FormField
-                        control={editForm.control}
-                        name="isPublished"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                            <div className="space-y-0.5">
-                              <FormLabel>نشر الصفحة</FormLabel>
-                              <FormDescription>
-                                هل هذه الصفحة منشورة؟
-                              </FormDescription>
-                            </div>
-                            <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      {/* تم إزالة خيارات العرض في الهيدر والفوتر لتتم إدارتها عبر القوائم فقط */}
-                    </div>
-                    <DialogFooter>
-                      <Button type="submit" disabled={updateMutation.isPending}>
-                        {updateMutation.isPending ? (
-                          <>
-                            <RefreshCw className="ml-2 h-4 w-4 animate-spin" />
-                            جاري الحفظ...
-                          </>
-                        ) : (
-                          <>
-                            <Check className="ml-2 h-4 w-4" />
-                            حفظ التغييرات
-                          </>
-                        )}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </Form>
-              )}
-            </DialogContent>
-          </Dialog>
-
-          {/* نافذة معاينة الصفحة */}
-          <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
-            <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>معاينة: {selectedPage?.title}</DialogTitle>
-                <DialogDescription>
-                  معاينة محتوى الصفحة كما سيظهر للمستخدمين
-                </DialogDescription>
-              </DialogHeader>
-              {selectedPage && (
-                <div className="p-4 border rounded-md bg-white">
-                  <div
-                    className="prose prose-lg max-w-none"
-                    dangerouslySetInnerHTML={{ __html: selectedPage.content }}
-                  />
-                </div>
-              )}
-              <DialogFooter>
+            <div className="relative w-full md:w-64">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                type="search"
+                placeholder="بحث في الصفحات..."
+                className="w-full pl-3 pr-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+          
+          {/* جدول الصفحات */}
+          <div className="bg-white rounded-md border">
+            {isLoading ? (
+              <div className="p-8 text-center">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+                <p className="mt-4 text-muted-foreground">جاري تحميل البيانات...</p>
+              </div>
+            ) : isError ? (
+              <div className="p-8 text-center bg-red-50 rounded-lg">
+                <XCircle className="h-12 w-12 mx-auto text-red-500 mb-3" />
+                <p className="text-red-600 font-medium">حدث خطأ أثناء تحميل البيانات</p>
+                <p className="text-gray-600 mt-2">يرجى تحديث الصفحة أو المحاولة مرة أخرى لاحقًا</p>
+              </div>
+            ) : filteredAndSortedPages.length === 0 ? (
+              <div className="p-8 text-center">
+                <FileText className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+                <p className="text-muted-foreground">لا توجد صفحات مطابقة للبحث</p>
                 <Button 
-                  variant="outline"
-                  onClick={() => setIsPreviewDialogOpen(false)}
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setActiveTab('all');
+                  }}
                 >
-                  إغلاق
+                  مسح التصفية
                 </Button>
-                {selectedPage && (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsPreviewDialogOpen(false);
-                      handleEdit(selectedPage);
-                    }}
-                  >
-                    <Edit className="ml-2 h-4 w-4" />
-                    تعديل
-                  </Button>
-                )}
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          {/* نافذة تأكيد الحذف */}
-          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-                <AlertDialogDescription>
-                  سيتم حذف الصفحة "{selectedPage?.title}" بشكل نهائي. 
-                  هذا الإجراء لا يمكن التراجع عنه.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600">
-                  {deleteMutation.isPending ? (
-                    <>
-                      <RefreshCw className="ml-2 h-4 w-4 animate-spin" />
-                      جارٍ الحذف...
-                    </>
-                  ) : (
-                    'حذف'
-                  )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[50px]">#</TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('title')}>
+                        <div className="flex items-center">
+                          العنوان
+                          {sortField === 'title' && (
+                            <ArrowUpDown className={cn(
+                              "mr-2 h-4 w-4",
+                              sortDirection === 'desc' && "transform rotate-180"
+                            )} />
+                          )}
+                        </div>
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('slug')}>
+                        <div className="flex items-center">
+                          المسار
+                          {sortField === 'slug' && (
+                            <ArrowUpDown className={cn(
+                              "mr-2 h-4 w-4",
+                              sortDirection === 'desc' && "transform rotate-180"
+                            )} />
+                          )}
+                        </div>
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('updatedAt')}>
+                        <div className="flex items-center">
+                          آخر تحديث
+                          {sortField === 'updatedAt' && (
+                            <ArrowUpDown className={cn(
+                              "mr-2 h-4 w-4",
+                              sortDirection === 'desc' && "transform rotate-180"
+                            )} />
+                          )}
+                        </div>
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('isPublished')}>
+                        <div className="flex items-center">
+                          الحالة
+                          {sortField === 'isPublished' && (
+                            <ArrowUpDown className={cn(
+                              "mr-2 h-4 w-4",
+                              sortDirection === 'desc' && "transform rotate-180"
+                            )} />
+                          )}
+                        </div>
+                      </TableHead>
+                      <TableHead>إجراءات</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredAndSortedPages.map((page, index) => (
+                      <TableRow key={page.id} className="hover:bg-muted/50">
+                        <TableCell className="font-medium">{index + 1}</TableCell>
+                        <TableCell>
+                          <div className="font-medium">{page.title}</div>
+                          {page.metaTitle && (
+                            <div className="text-xs text-muted-foreground mt-1 truncate max-w-xs">
+                              {page.metaTitle}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell dir="ltr" className="font-mono text-sm">/{page.slug}</TableCell>
+                        <TableCell>{formatDate(page.updatedAt)}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={page.isPublished ? "success" : "warning"}
+                            className="cursor-pointer"
+                            onClick={() => togglePublish(page)}
+                          >
+                            {page.isPublished ? (
+                              <>
+                                <CheckCircle className="h-3.5 w-3.5 ml-1" />
+                                منشورة
+                              </>
+                            ) : (
+                              <>
+                                <XCircle className="h-3.5 w-3.5 ml-1" />
+                                مسودة
+                              </>
+                            )}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handlePreview(page)}
+                              title="معاينة"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(page)}
+                              title="تعديل"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive/80"
+                              onClick={() => handleDeleteClick(page)}
+                              title="حذف"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
         </main>
       </div>
+
+      {/* نافذة تأكيد الحذف */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>حذف الصفحة</DialogTitle>
+            <DialogDescription>
+              هل أنت متأكد من رغبتك في حذف صفحة "{selectedPage?.title}"؟ لا يمكن التراجع عن هذا الإجراء.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+            >
+              إلغاء
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+            >
+              حذف
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* نافذة معاينة الصفحة */}
+      <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedPage?.title}</DialogTitle>
+            <DialogDescription>
+              معاينة الصفحة كما ستظهر للزوار
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 p-4 border rounded-md bg-white">
+            <div dangerouslySetInnerHTML={{ __html: selectedPage?.content || '' }} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPreviewDialogOpen(false)}>
+              إغلاق
+            </Button>
+            {selectedPage && (
+              <Button 
+                variant="default" 
+                onClick={() => window.open(`/${selectedPage.slug}`, '_blank')}
+              >
+                فتح في تبويب جديد
+                <ExternalLink className="ml-2 h-4 w-4" />
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-}
+};
+
+export default AdminPages;

@@ -142,7 +142,6 @@ function App() {
                     <Route path="/admin/settings" component={AdminSettings} />
                     <Route path="/admin/site-settings" component={AdminSiteSettings} />
                     <Route path="/admin/pages" component={AdminPages} />
-                    <Route path="/admin/pages-new" component={AdminPagesNew} />
                     <Route path="/admin/pages/create" component={CreatePage} />
                     <Route path="/admin/pages/edit/:id" component={EditPage} />
                     <Route path="/admin/menus" component={AdminMenus} />
