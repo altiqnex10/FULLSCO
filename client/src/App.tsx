@@ -22,6 +22,7 @@ import AdminLevels from "@/pages/admin/levels";
 import AdminCountries from "@/pages/admin/countries";
 import AdminSiteSettings from "@/pages/admin/site-settings"; // نستخدم واجهة واحدة فقط لإعدادات الموقع
 import AdminPages from "@/pages/admin/pages";
+import AdminPagesNew from "@/pages/admin/pages-new";
 import AdminMenus from "@/pages/admin/menus-new";
 import AdminMedia from "@/pages/admin/media";
 import AdminRoles from "@/pages/admin/roles";
@@ -31,6 +32,8 @@ import AdminLogin from "@/pages/admin/login";
 // استيراد صفحات الإنشاء الجديدة
 import CreateScholarship from "@/pages/admin/scholarships/create";
 import CreatePost from "@/pages/admin/posts/create";
+import CreatePage from "@/pages/admin/pages/create";
+import EditPage from "@/pages/admin/pages/edit";
 
 // New Admin Dashboard Component
 import NewDashboard from "@/pages/admin/new-dashboard";
@@ -139,6 +142,9 @@ function App() {
                     <Route path="/admin/settings" component={AdminSettings} />
                     <Route path="/admin/site-settings" component={AdminSiteSettings} />
                     <Route path="/admin/pages" component={AdminPages} />
+                    <Route path="/admin/pages-new" component={AdminPagesNew} />
+                    <Route path="/admin/pages/create" component={CreatePage} />
+                    <Route path="/admin/pages/edit/:id" component={EditPage} />
                     <Route path="/admin/menus" component={AdminMenus} />
                     <Route path="/admin/media" component={AdminMedia} />
                     <Route path="/admin/roles" component={AdminRoles} />
