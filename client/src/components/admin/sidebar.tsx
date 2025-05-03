@@ -288,7 +288,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
         aria-hidden={isMobile && !isMobileOpen}
       >
         {/* زر الإغلاق - تم تغيير الموضع ليناسب الاتجاه العربي RTL */}
-        {isMobile && (
+        {isMobile && isMobileOpen && (
           <button 
             className="absolute -left-10 top-4 bg-primary text-primary-foreground p-2 rounded-l-md shadow-lg" 
             onClick={onClose}
