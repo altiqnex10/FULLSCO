@@ -381,7 +381,7 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
 
         {/* المحتوى */}
         <div className={cn(
-          "flex-grow p-3 md:p-4 lg:p-6",
+          "flex-grow p-2 md:p-4 lg:p-6 overflow-x-hidden",
           // إضافة مساحة أسفل الصفحة عند وجود شريط التنقل السفلي للجوال
           isMobile && "pb-20"
         )}>
