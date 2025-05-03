@@ -61,8 +61,6 @@ export default function MediaManagementPage() {
   const [sortBy, setSortBy] = useState<string>('newest');
   const { isLoading: authLoading, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
-  const isMobile = useIsMobile();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // التحقق من تسجيل الدخول
@@ -391,7 +389,6 @@ export default function MediaManagementPage() {
     }
   }, [isUploadDialogOpen, uploadForm]);
 
-  // في حالة تحميل بيانات المصادقة أو عدم تسجيل الدخول
   if (authLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -400,646 +397,638 @@ export default function MediaManagementPage() {
     );
   }
 
-  return (
-    <div className="bg-background min-h-screen relative overflow-x-hidden">
-      {/* السايدبار للجوال */}
-      <Sidebar 
-        isMobileOpen={sidebarOpen} 
-        onClose={() => {
-          console.log('Media: closing sidebar');
-          setSidebarOpen(false);
-        }} 
-      />
+  // إعداد زر رفع الملفات وزر التحديث في شريط الإجراءات
+  const mediaActions = (
+    <div className="flex items-center gap-2">
+      <Button variant="outline" onClick={() => refetch()}>
+        <RefreshCw className="ml-2 h-4 w-4" />
+        تحديث
+      </Button>
       
-      {/* المحتوى الرئيسي */}
-      <div className={cn(
-        "transition-all duration-300",
-        isMobile ? "w-full" : "mr-64"
-      )}>
-        <main className="p-4 md:p-6">
-          {/* زر فتح السايدبار في الجوال والهيدر */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div className="flex items-center">
-              {isMobile && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="ml-2" 
-                  onClick={() => setSidebarOpen(true)}
-                  aria-label="فتح القائمة"
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
-              )}
-              <h1 className="text-xl md:text-2xl font-bold">مكتبة الوسائط</h1>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => refetch()}>
-                <RefreshCw className="ml-2 h-4 w-4" />
-                تحديث
-              </Button>
-              
-              <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <PlusCircle className="ml-2 h-4 w-4" />
-                    رفع ملف جديد
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px]">
-                  <DialogHeader>
-                    <DialogTitle>رفع ملف وسائط جديد</DialogTitle>
-                    <DialogDescription>
-                      قم برفع ملف جديد إلى مكتبة الوسائط. يمكنك رفع صور، مستندات، وملفات أخرى.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <Form {...uploadForm}>
-                    <form onSubmit={uploadForm.handleSubmit(handleUploadFile)} className="space-y-4">
-                      <FormField
-                        control={uploadForm.control}
-                        name="file"
-                        render={({ field: { value, onChange, ...fieldProps } }) => (
-                          <FormItem>
-                            <FormLabel>اختر ملفًا</FormLabel>
-                            <FormControl>
-                              <div className="grid gap-2">
-                                <Input
-                                  ref={fileInputRef}
-                                  type="file"
-                                  onChange={handleFileChange}
-                                  className="file:text-foreground-muted file:bg-muted"
-                                  {...fieldProps}
-                                />
-                                {value && (
-                                  <div className="text-sm text-muted-foreground">
-                                    الملف المختار: {(value as File).name} ({formatFileSize((value as File).size)})
-                                  </div>
-                                )}
-                              </div>
-                            </FormControl>
-                            <FormDescription>
-                              الحد الأقصى لحجم الملف: 10 ميجابايت. الأنواع المدعومة: JPG، PNG، GIF، PDF، DOCX، XLSX، PPTX.
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={uploadForm.control}
-                        name="title"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>عنوان الملف (اختياري)</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="مثال: صورة الحرم الجامعي" />
-                            </FormControl>
-                            <FormDescription>
-                              عنوان وصفي يساعد في التعرف على الملف
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={uploadForm.control}
-                        name="alt"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>نص بديل (اختياري)</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="وصف الصورة للقراء الشاشة" />
-                            </FormControl>
-                            <FormDescription>
-                              نص بديل للصور لتحسين إمكانية الوصول وSEO
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <DialogFooter>
-                        <Button type="submit" disabled={uploadMutation.isPending || !uploadForm.getValues('file')}>
-                          {uploadMutation.isPending ? (
-                            <>
-                              <RefreshCw className="ml-2 h-4 w-4 animate-spin" />
-                              جاري الرفع...
-                            </>
-                          ) : (
-                            <>
-                              <UploadCloud className="ml-2 h-4 w-4" />
-                              رفع الملف
-                            </>
-                          )}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
+      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+        <DialogTrigger asChild>
+          <Button>
+            <UploadCloud className="ml-2 h-4 w-4" />
+            رفع ملف
+          </Button>
+        </DialogTrigger>
+      </Dialog>
+    </div>
+  );
 
-          {/* أدوات الفلترة والبحث */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="البحث في الوسائط..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-9"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Select value={fileType} onValueChange={setFileType}>
-                <SelectTrigger className="w-[150px]">
-                  <Filter className="ml-2 h-4 w-4" />
-                  <SelectValue placeholder="جميع الملفات" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">جميع الملفات</SelectItem>
-                  <SelectItem value="image">صور</SelectItem>
-                  <SelectItem value="document">مستندات</SelectItem>
-                  <SelectItem value="other">أخرى</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="الأحدث أولاً" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">الأحدث أولاً</SelectItem>
-                  <SelectItem value="oldest">الأقدم أولاً</SelectItem>
-                  <SelectItem value="name_asc">الاسم (أ-ي)</SelectItem>
-                  <SelectItem value="name_desc">الاسم (ي-أ)</SelectItem>
-                  <SelectItem value="size_asc">الحجم (الأصغر أولاً)</SelectItem>
-                  <SelectItem value="size_desc">الحجم (الأكبر أولاً)</SelectItem>
-                </SelectContent>
-              </Select>
-              
+  return (
+    <AdminLayout title="إدارة ملفات الوسائط" actions={mediaActions}>
+      <div className="p-4">
+        {/* شريط أدوات البحث والفلترة */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between bg-muted/30 p-4 rounded-lg">
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <Input
+              placeholder="بحث عن ملفات..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full md:w-96"
+              prefix={<Search className="h-4 w-4 text-muted-foreground" />}
+            />
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Filter className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <div className="p-2">
+                  <p className="mb-2 text-sm font-medium">نوع الملف</p>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <Checkbox 
+                        id="filter-all" 
+                        checked={fileType === 'all'} 
+                        onCheckedChange={() => setFileType('all')}
+                      />
+                      <label htmlFor="filter-all" className="text-sm">الكل</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox 
+                        id="filter-images" 
+                        checked={fileType === 'image'} 
+                        onCheckedChange={() => setFileType('image')}
+                      />
+                      <label htmlFor="filter-images" className="text-sm">صور</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox 
+                        id="filter-documents" 
+                        checked={fileType === 'document'} 
+                        onCheckedChange={() => setFileType('document')}
+                      />
+                      <label htmlFor="filter-documents" className="text-sm">مستندات</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox 
+                        id="filter-other" 
+                        checked={fileType === 'other'} 
+                        onCheckedChange={() => setFileType('other')}
+                      />
+                      <label htmlFor="filter-other" className="text-sm">أخرى</label>
+                    </div>
+                  </div>
+                  
+                  <hr className="my-2" />
+                  
+                  <p className="mb-2 text-sm font-medium">الترتيب</p>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="ترتيب حسب" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="newest">الأحدث</SelectItem>
+                      <SelectItem value="oldest">الأقدم</SelectItem>
+                      <SelectItem value="name_asc">الاسم (أ-ي)</SelectItem>
+                      <SelectItem value="name_desc">الاسم (ي-أ)</SelectItem>
+                      <SelectItem value="size_asc">الحجم (الأصغر أولاً)</SelectItem>
+                      <SelectItem value="size_desc">الحجم (الأكبر أولاً)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          
+          <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+            <div className="flex items-center">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
-                title="عرض الشبكة"
+                className={cn(viewMode === 'grid' && "bg-muted")}
                 onClick={() => setViewMode('grid')}
-                className={viewMode === 'grid' ? 'bg-muted' : ''}
               >
                 <Grid className="h-4 w-4" />
               </Button>
-              
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
-                title="عرض القائمة"
+                className={cn(viewMode === 'list' && "bg-muted")}
                 onClick={() => setViewMode('list')}
-                className={viewMode === 'list' ? 'bg-muted' : ''}
               >
                 <List className="h-4 w-4" />
               </Button>
             </div>
-          </div>
-
-          {/* شريط أدوات المجموعة */}
-          {selectedFiles.length > 0 && (
-            <div className="bg-muted py-2 px-4 rounded-md mb-4 flex items-center justify-between">
+            
+            {selectedFiles.length > 0 && (
               <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={selectedFiles.length === filteredFiles.length && filteredFiles.length > 0}
-                  onCheckedChange={selectAllFiles}
-                  id="select-all"
-                />
-                <label htmlFor="select-all" className="text-sm cursor-pointer">
-                  {selectedFiles.length} ملفات محددة
-                </label>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-red-500"
-                  onClick={() => bulkDeleteMutation.mutate(selectedFiles)}
-                  disabled={bulkDeleteMutation.isPending}
-                >
-                  {bulkDeleteMutation.isPending ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="h-4 w-4" />
-                  )}
-                  <span className="mr-2">حذف المحدد</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedFiles([])}
-                >
-                  <X className="h-4 w-4" />
-                  <span className="mr-2">إلغاء التحديد</span>
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* محتوى الوسائط */}
-          <Card>
-            <CardContent className="p-6">
-              {isLoading ? (
-                <div className="flex justify-center items-center h-32">
-                  <RefreshCw className="h-6 w-6 animate-spin" />
-                  <span className="mr-2">جاري التحميل...</span>
-                </div>
-              ) : isError ? (
-                <div className="text-center py-4 text-red-500">
-                  <p>حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى.</p>
-                  <Button variant="outline" onClick={() => refetch()} className="mt-2">
-                    إعادة المحاولة
-                  </Button>
-                </div>
-              ) : sortedFiles.length === 0 ? (
-                <div className="text-center py-10">
-                  {searchTerm || fileType !== 'all' ? (
-                    <div className="space-y-2">
-                      <p className="text-muted-foreground">لا توجد ملفات تطابق معايير البحث</p>
-                      <Button variant="outline" onClick={() => { setSearchTerm(''); setFileType('all'); }}>
-                        إعادة ضبط البحث
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="mx-auto p-6 bg-muted rounded-full w-20 h-20 flex items-center justify-center">
-                        <ImageIcon className="h-10 w-10 text-muted-foreground" />
-                      </div>
-                      <h3 className="font-medium text-lg">مكتبة الوسائط فارغة</h3>
-                      <p className="text-muted-foreground">قم برفع ملفات الوسائط لاستخدامها في الموقع</p>
-                      <Button onClick={() => setIsUploadDialogOpen(true)}>
-                        <UploadCloud className="ml-2 h-4 w-4" />
-                        رفع الملفات
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ) : viewMode === 'grid' ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {sortedFiles.map(file => (
-                    <div key={file.id} className="relative group">
-                      <div 
-                        className={cn(
-                          "border rounded-md overflow-hidden",
-                          isFileSelected(file.id) && "ring-2 ring-primary"
-                        )}
+                <span className="text-sm text-muted-foreground">
+                  {selectedFiles.length} ملف محدد
+                </span>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Trash2 className="h-4 w-4 ml-2" />
+                      حذف المحدد
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>هل أنت متأكد من حذف الملفات المحددة؟</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        سيتم حذف {selectedFiles.length} ملف بشكل نهائي. هذا الإجراء لا يمكن التراجع عنه.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={() => bulkDeleteMutation.mutate(selectedFiles)}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
-                        {/* تحديد الملف */}
-                        <div className="absolute top-2 right-2 z-20">
-                          <Checkbox
-                            checked={isFileSelected(file.id)}
-                            onCheckedChange={() => toggleFileSelection(file.id)}
-                            className="bg-background/80 data-[state=checked]:bg-primary"
-                          />
-                        </div>
-                        
-                        {/* معاينة الملف */}
-                        <div 
-                          className="h-32 flex items-center justify-center bg-muted/50 cursor-pointer"
-                          onClick={() => {
-                            setSelectedFile(file);
-                            setIsDetailsDialogOpen(true);
-                          }}
-                        >
-                          {file.mimeType.startsWith('image/') ? (
-                            <img 
-                              src={file.url} 
-                              alt={file.alt || file.title || file.filename} 
-                              className="max-h-full max-w-full object-contain"
-                            />
-                          ) : (
-                            <div className="text-center">
-                              {getFileIcon(file.mimeType)}
-                              <div className="text-xs mt-1 text-muted-foreground">
-                                {file.mimeType.split('/')[1]?.toUpperCase()}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* معلومات الملف */}
-                        <div className="p-2">
-                          <h3 className="text-sm font-medium truncate" title={file.title || file.originalFilename}>
-                            {file.title || getShortFileName(file.originalFilename)}
-                          </h3>
-                          <p className="text-xs text-muted-foreground">
-                            {formatFileSize(file.size)}
-                          </p>
-                        </div>
-                        
-                        {/* أزرار الإجراءات */}
-                        <div className="opacity-0 group-hover:opacity-100 absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/80 to-transparent p-2 transition-opacity">
-                          <div className="flex justify-end gap-1">
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-7 w-7"
-                              onClick={() => copyFileUrl(file.url)}
-                              title="نسخ الرابط"
-                            >
-                              <Copy className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-7 w-7"
-                              onClick={() => window.open(file.url, '_blank')}
-                              title="تنزيل"
-                            >
-                              <Download className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-7 w-7 text-red-500"
-                              onClick={() => {
-                                setSelectedFile(file);
-                                setIsDeleteDialogOpen(true);
-                              }}
-                              title="حذف"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full table-auto">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-right px-2 py-2 whitespace-nowrap w-10">
-                          <Checkbox
-                            checked={selectedFiles.length === filteredFiles.length && filteredFiles.length > 0}
-                            onCheckedChange={selectAllFiles}
-                          />
-                        </th>
-                        <th className="text-right px-4 py-2 whitespace-nowrap font-medium">اسم الملف</th>
-                        <th className="text-right px-4 py-2 whitespace-nowrap font-medium">النوع</th>
-                        <th className="text-right px-4 py-2 whitespace-nowrap font-medium">الحجم</th>
-                        <th className="text-right px-4 py-2 whitespace-nowrap font-medium">تاريخ الرفع</th>
-                        <th className="text-left px-4 py-2 whitespace-nowrap font-medium">الإجراءات</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sortedFiles.map(file => (
-                        <tr key={file.id} className="border-b hover:bg-muted/30">
-                          <td className="text-right px-2 py-2 whitespace-nowrap">
-                            <Checkbox
-                              checked={isFileSelected(file.id)}
-                              onCheckedChange={() => toggleFileSelection(file.id)}
-                            />
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap">
-                            <div className="flex items-center gap-2">
-                              {getFileIcon(file.mimeType)}
-                              <div>
-                                <div className="font-medium truncate max-w-xs" title={file.title || file.originalFilename}>
-                                  {file.title || file.originalFilename}
-                                </div>
-                                <div className="text-xs text-muted-foreground" dir="ltr">
-                                  {file.filename}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm" dir="ltr">
-                            {file.mimeType}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm">
-                            {formatFileSize(file.size)}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm">
-                            {new Date(file.createdAt).toLocaleDateString('ar-SA')}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap">
-                            <div className="flex justify-end gap-1">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8"
-                                onClick={() => {
-                                  setSelectedFile(file);
-                                  setIsDetailsDialogOpen(true);
-                                }}
-                                title="تفاصيل"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8"
-                                onClick={() => copyFileUrl(file.url)}
-                                title="نسخ الرابط"
-                              >
-                                <Copy className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8"
-                                onClick={() => window.open(file.url, '_blank')}
-                                title="تنزيل"
-                              >
-                                <Download className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 text-red-500"
-                                onClick={() => {
-                                  setSelectedFile(file);
-                                  setIsDeleteDialogOpen(true);
-                                }}
-                                title="حذف"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* نافذة تفاصيل الملف */}
-          <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle>تفاصيل الملف</DialogTitle>
-                <DialogDescription>
-                  عرض وتعديل بيانات الملف
-                </DialogDescription>
-              </DialogHeader>
-              {selectedFile && (
-                <div className="space-y-4">
-                  {/* معاينة الملف */}
-                  <div className="flex justify-center bg-muted/50 rounded-md p-4 max-h-72 overflow-hidden">
-                    {selectedFile.mimeType.startsWith('image/') ? (
-                      <img 
-                        src={selectedFile.url} 
-                        alt={selectedFile.alt || selectedFile.title || selectedFile.filename} 
-                        className="max-h-full max-w-full object-contain"
-                      />
-                    ) : (
-                      <div className="text-center">
-                        {getFileIcon(selectedFile.mimeType)}
-                        <div className="text-sm mt-1 text-muted-foreground">
-                          {selectedFile.mimeType.split('/')[1]?.toUpperCase()}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* معلومات الملف */}
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <div className="font-medium">اسم الملف:</div>
-                      <div dir="ltr" className="text-muted-foreground break-all">
-                        {selectedFile.filename}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="font-medium">الحجم:</div>
-                      <div className="text-muted-foreground">
-                        {formatFileSize(selectedFile.size)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="font-medium">نوع الملف:</div>
-                      <div dir="ltr" className="text-muted-foreground">
-                        {selectedFile.mimeType}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="font-medium">تاريخ الرفع:</div>
-                      <div className="text-muted-foreground">
-                        {new Date(selectedFile.createdAt).toLocaleDateString('ar-SA')}
-                      </div>
-                    </div>
-                    {selectedFile.width && selectedFile.height && (
-                      <div>
-                        <div className="font-medium">الأبعاد:</div>
-                        <div dir="ltr" className="text-muted-foreground">
-                          {selectedFile.width} × {selectedFile.height}
-                        </div>
-                      </div>
-                    )}
-                    <div>
-                      <div className="font-medium">الرابط:</div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => copyFileUrl(selectedFile.url)}
-                          title="نسخ الرابط"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                        </Button>
-                        <span dir="ltr" className="text-xs text-muted-foreground truncate max-w-48">
-                          {selectedFile.url}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* نموذج تعديل العنوان والوصف */}
-                  <form onSubmit={detailsForm.handleSubmit(handleUpdateFile)} className="space-y-4 pt-4 border-t">
-                    <div className="grid gap-4">
-                      <div className="grid gap-2">
-                        <label htmlFor="title" className="text-sm font-medium leading-none">
-                          عنوان الملف
-                        </label>
-                        <Input
-                          id="title"
-                          placeholder="أدخل عنوانًا وصفيًا للملف"
-                          {...detailsForm.register('title')}
+                        {bulkDeleteMutation.isPending ? 'جاري الحذف...' : 'تأكيد الحذف'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* عرض الملفات */}
+        <div className="mb-6">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <p>جاري تحميل الملفات...</p>
+            </div>
+          ) : isError ? (
+            <div className="flex items-center justify-center h-64">
+              <p className="text-destructive">حدث خطأ أثناء تحميل الملفات</p>
+            </div>
+          ) : sortedFiles.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 bg-muted/30 rounded-lg">
+              <div className="mb-4 text-muted-foreground">
+                <File className="h-12 w-12 mx-auto mb-2" />
+                <p>لا توجد ملفات متاحة</p>
+              </div>
+              <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <UploadCloud className="ml-2 h-4 w-4" />
+                    رفع ملف جديد
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
+            </div>
+          ) : viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {sortedFiles.map((file) => (
+                <Card key={file.id} className={cn("overflow-hidden group", isFileSelected(file.id) && "ring-2 ring-primary")}>
+                  <div className="relative">
+                    {file.mimeType.startsWith('image/') ? (
+                      <div 
+                        className="aspect-video bg-muted flex items-center justify-center overflow-hidden" 
+                        onClick={() => setSelectedFile(file)}
+                      >
+                        <img
+                          src={file.url}
+                          alt={file.alt || file.originalFilename}
+                          className="object-cover w-full h-full cursor-pointer"
+                          onClick={() => setIsDetailsDialogOpen(true)}
                         />
-                        <p className="text-sm text-muted-foreground">
-                          عنوان وصفي يساعد في التعرف على الملف
-                        </p>
                       </div>
-                      
-                      {selectedFile.mimeType.startsWith('image/') && (
-                        <div className="grid gap-2">
-                          <label htmlFor="alt" className="text-sm font-medium leading-none">
-                            النص البديل
-                          </label>
-                          <Input
-                            id="alt"
-                            placeholder="وصف للصورة للقراء الشاشة"
-                            {...detailsForm.register('alt')}
-                          />
-                          <p className="text-sm text-muted-foreground">
-                            نص بديل للصور لتحسين إمكانية الوصول وSEO
+                    ) : (
+                      <div 
+                        className="aspect-video bg-muted flex items-center justify-center" 
+                        onClick={() => {
+                          setSelectedFile(file);
+                          setIsDetailsDialogOpen(true);
+                        }}
+                      >
+                        <div className="text-center cursor-pointer">
+                          {getFileIcon(file.mimeType)}
+                          <p className="text-xs mt-2 text-muted-foreground">
+                            {file.originalFilename.split('.').pop()?.toUpperCase()}
                           </p>
                         </div>
-                      )}
+                      </div>
+                    )}
+                    
+                    <div className="absolute top-2 right-2">
+                      <Checkbox 
+                        checked={isFileSelected(file.id)}
+                        onCheckedChange={() => toggleFileSelection(file.id)}
+                        className="h-5 w-5 border-2 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                      />
                     </div>
                     
-                    <DialogFooter>
-                      <Button type="submit" disabled={updateMutation.isPending}>
-                        {updateMutation.isPending ? (
-                          <>
-                            <RefreshCw className="ml-2 h-4 w-4 animate-spin" />
-                            جاري الحفظ...
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="ml-2 h-4 w-4" />
-                            حفظ التغييرات
-                          </>
-                        )}
+                    <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex justify-end gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-white hover:bg-black/20"
+                        onClick={() => {
+                          setSelectedFile(file);
+                          setIsDetailsDialogOpen(true);
+                        }}
+                      >
+                        <PlusCircle className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-white hover:bg-black/20"
+                        onClick={() => copyFileUrl(file.url)}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <a 
+                        href={file.url} 
+                        download={file.originalFilename}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-white hover:bg-black/20"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </a>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-white hover:bg-red-500/80"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>هل أنت متأكد من حذف الملف؟</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              سيتم حذف الملف "{file.originalFilename}" بشكل نهائي. هذا الإجراء لا يمكن التراجع عنه.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => deleteMutation.mutate(file.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              {deleteMutation.isPending && selectedFile?.id === file.id ? 'جاري الحذف...' : 'تأكيد الحذف'}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    <h3 className="font-medium text-sm truncate" title={file.title || file.originalFilename}>
+                      {file.title || getShortFileName(file.originalFilename)}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatFileSize(file.size)}
+                    </p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="border rounded-lg overflow-hidden">
+              <div className="grid grid-cols-12 gap-4 p-4 font-medium text-sm bg-muted/30">
+                <div className="col-span-1">
+                  <Checkbox 
+                    checked={selectedFiles.length > 0 && selectedFiles.length === filteredFiles.length} 
+                    onCheckedChange={selectAllFiles}
+                  />
+                </div>
+                <div className="col-span-5">الملف</div>
+                <div className="col-span-2">الحجم</div>
+                <div className="col-span-2">النوع</div>
+                <div className="col-span-2">إجراءات</div>
+              </div>
+              {sortedFiles.map((file) => (
+                <div key={file.id} className={cn("grid grid-cols-12 gap-4 p-4 text-sm border-t", isFileSelected(file.id) && "bg-muted/30")}>
+                  <div className="col-span-1">
+                    <Checkbox 
+                      checked={isFileSelected(file.id)}
+                      onCheckedChange={() => toggleFileSelection(file.id)}
+                    />
+                  </div>
+                  <div className="col-span-5 flex items-center gap-3">
+                    <div className="h-10 w-10 bg-muted rounded flex items-center justify-center">
+                      {file.mimeType.startsWith('image/') ? (
+                        <img
+                          src={file.url}
+                          alt={file.alt || file.originalFilename}
+                          className="object-cover h-full w-full rounded"
+                        />
+                      ) : (
+                        getFileIcon(file.mimeType)
+                      )}
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="font-medium truncate" title={file.title || file.originalFilename}>
+                        {file.title || file.originalFilename}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {new Date(file.createdAt).toLocaleDateString('ar-EG')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="col-span-2 flex items-center text-muted-foreground">
+                    {formatFileSize(file.size)}
+                  </div>
+                  <div className="col-span-2 flex items-center text-muted-foreground">
+                    {file.mimeType.split('/')[1]?.toUpperCase() || file.mimeType}
+                  </div>
+                  <div className="col-span-2 flex items-center gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8"
+                      onClick={() => {
+                        setSelectedFile(file);
+                        setIsDetailsDialogOpen(true);
+                      }}
+                    >
+                      <PlusCircle className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8"
+                      onClick={() => copyFileUrl(file.url)}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <a 
+                      href={file.url} 
+                      download={file.originalFilename}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </a>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          className="h-8 w-8 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/20"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>هل أنت متأكد من حذف الملف؟</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            سيتم حذف الملف "{file.originalFilename}" بشكل نهائي. هذا الإجراء لا يمكن التراجع عنه.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => deleteMutation.mutate(file.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            {deleteMutation.isPending && selectedFile?.id === file.id ? 'جاري الحذف...' : 'تأكيد الحذف'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        
+        {/* نافذة رفع ملف جديد */}
+        <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>رفع ملف جديد</DialogTitle>
+              <DialogDescription>
+                اختر ملفًا من جهازك لرفعه إلى المكتبة
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...uploadForm}>
+              <form onSubmit={uploadForm.handleSubmit(handleUploadFile)} className="space-y-4">
+                <div className="grid w-full max-w-sm items-center gap-1.5">
+                  <FormLabel htmlFor="file-upload">الملف</FormLabel>
+                  <Input
+                    id="file-upload"
+                    type="file"
+                    className="cursor-pointer"
+                    onChange={handleFileChange}
+                    ref={fileInputRef}
+                  />
+                </div>
+                
+                <FormField
+                  control={uploadForm.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>عنوان الملف</FormLabel>
+                      <FormControl>
+                        <Input placeholder="عنوان وصفي للملف" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        سيظهر هذا العنوان بدلاً من اسم الملف الأصلي.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={uploadForm.control}
+                  name="alt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>النص البديل</FormLabel>
+                      <FormControl>
+                        <Input placeholder="وصف للصورة" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        مهم لإمكانية الوصول وتحسين SEO (للصور فقط).
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <DialogFooter>
+                  <Button 
+                    type="submit" 
+                    disabled={uploadMutation.isPending || !uploadForm.getValues('file')}
+                  >
+                    {uploadMutation.isPending ? 'جاري الرفع...' : 'رفع الملف'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+        
+        {/* نافذة تفاصيل الملف */}
+        <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+          <DialogContent className="sm:max-w-[550px]">
+            <DialogHeader>
+              <DialogTitle>تفاصيل الملف</DialogTitle>
+            </DialogHeader>
+            {selectedFile && (
+              <div className="space-y-4">
+                <div className="flex justify-center">
+                  {selectedFile.mimeType.startsWith('image/') ? (
+                    <div className="mb-4 overflow-hidden rounded-lg border bg-muted max-w-full">
+                      <img 
+                        src={selectedFile.url} 
+                        alt={selectedFile.alt || selectedFile.originalFilename}
+                        className="max-h-[300px] object-contain mx-auto"
+                      />
+                    </div>
+                  ) : (
+                    <div className="mb-4 h-40 w-40 flex items-center justify-center bg-muted rounded-lg">
+                      {getFileIcon(selectedFile.mimeType)}
+                    </div>
+                  )}
+                </div>
+                
+                <Form {...detailsForm}>
+                  <form onSubmit={detailsForm.handleSubmit(handleUpdateFile)} className="space-y-4">
+                    <FormField
+                      control={detailsForm.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>عنوان الملف</FormLabel>
+                          <FormControl>
+                            <Input placeholder="عنوان وصفي للملف" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={detailsForm.control}
+                      name="alt"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>النص البديل</FormLabel>
+                          <FormControl>
+                            <Input placeholder="وصف للصورة" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            مهم لإمكانية الوصول وتحسين SEO (للصور فقط).
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <span className="text-muted-foreground">الاسم الأصلي:</span>
+                        <span>{selectedFile.originalFilename}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <span className="text-muted-foreground">الحجم:</span>
+                        <span>{formatFileSize(selectedFile.size)}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <span className="text-muted-foreground">نوع الملف:</span>
+                        <span>{selectedFile.mimeType}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <span className="text-muted-foreground">تاريخ الرفع:</span>
+                        <span>{new Date(selectedFile.createdAt).toLocaleDateString('ar-EG')}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <span className="text-muted-foreground">الرابط:</span>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            readOnly
+                            value={selectedFile.url}
+                            className="w-full text-xs p-1 border rounded bg-muted"
+                          />
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 shrink-0"
+                            onClick={() => copyFileUrl(selectedFile.url)}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <DialogFooter className="gap-2 sm:gap-0">
+                      <div className="flex items-center gap-2">
+                        <a 
+                          href={selectedFile.url} 
+                          download={selectedFile.originalFilename}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Button variant="outline" type="button">
+                            <Download className="ml-2 h-4 w-4" />
+                            تنزيل
+                          </Button>
+                        </a>
+                        
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" type="button">
+                              <Trash2 className="ml-2 h-4 w-4" />
+                              حذف
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>هل أنت متأكد من حذف الملف؟</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                سيتم حذف الملف "{selectedFile.originalFilename}" بشكل نهائي. هذا الإجراء لا يمكن التراجع عنه.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => deleteMutation.mutate(selectedFile.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                {deleteMutation.isPending ? 'جاري الحذف...' : 'تأكيد الحذف'}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                      
+                      <Button 
+                        type="submit" 
+                        disabled={updateMutation.isPending}
+                      >
+                        {updateMutation.isPending ? 'جاري الحفظ...' : 'حفظ التغييرات'}
                       </Button>
                     </DialogFooter>
                   </form>
-                </div>
-              )}
-            </DialogContent>
-          </Dialog>
-
-          {/* نافذة تأكيد الحذف */}
-          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-                <AlertDialogDescription>
-                  سيتم حذف الملف "{selectedFile?.title || selectedFile?.originalFilename}" بشكل نهائي.
-                  هذا الإجراء لا يمكن التراجع عنه.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => selectedFile && deleteMutation.mutate(selectedFile.id)}
-                  className="bg-red-500 hover:bg-red-600"
-                >
-                  {deleteMutation.isPending ? (
-                    <>
-                      <RefreshCw className="ml-2 h-4 w-4 animate-spin" />
-                      جارٍ الحذف...
-                    </>
-                  ) : (
-                    'حذف'
-                  )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </main>
+                </Form>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
-    </div>
+    </AdminLayout>
   );
 }
