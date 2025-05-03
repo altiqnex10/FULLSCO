@@ -478,19 +478,6 @@ const AdminScholarships = () => {
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {/* زر الإضافة */}
-      <Button 
-        size="sm" 
-        className="h-9 gap-1 font-medium"
-        asChild
-      >
-        <Link href="/admin/scholarships/create">
-          <PlusCircle className="h-4 w-4 ml-1" />
-          <span className="hidden sm:inline-block">إضافة منحة</span>
-          <span className="inline-block sm:hidden">إضافة</span>
-        </Link>
-      </Button>
     </div>
   );
 
