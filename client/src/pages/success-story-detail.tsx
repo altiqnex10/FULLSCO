@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Calendar, User, Home, ChevronLeft, Share2, Twitter, Facebook, Link2 } from 'lucide-react';
 import Container from '@/components/ui/container';
+import PageHeader from '@/components/page-header';
 import { formatDate } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -107,6 +108,11 @@ export default function SuccessStoryDetail() {
         <meta name="description" content={story.briefContent || story.title} />
       </Helmet>
 
+      <PageHeader
+        title="قصة نجاح"
+        description={story.title}
+      />
+      
       <Container>
         <div className="py-8 md:py-12">
           {/* مسار التنقل */}
