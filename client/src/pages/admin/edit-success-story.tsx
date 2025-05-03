@@ -144,7 +144,7 @@ const EditSuccessStory = () => {
       const payload = {
         ...data,
         imageUrl: data.featuredImage, // تحويل featuredImage إلى imageUrl
-        scholarshipId: data.scholarshipId ? parseInt(data.scholarshipId) : null,
+        scholarshipId: data.scholarshipId && data.scholarshipId !== "none" ? parseInt(data.scholarshipId) : null,
       };
       
       console.log("بيانات تحديث قصة النجاح للإرسال:", payload);
@@ -393,7 +393,7 @@ const EditSuccessStory = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">بدون منحة</SelectItem>
+                          <SelectItem value="none">بدون منحة</SelectItem>
                           {scholarships.map((scholarship) => (
                             <SelectItem key={scholarship.id} value={scholarship.id.toString()}>
                               {scholarship.title}
