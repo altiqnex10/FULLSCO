@@ -2,16 +2,15 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { 
   Trophy, PlusCircle, Edit, Trash2, Search, 
-  CheckCircle, XCircle, AlertTriangle, Menu, 
-  Eye, RefreshCw, ArrowUpDown, Filter
+  CheckCircle, XCircle, AlertTriangle, 
+  RefreshCw, ArrowUpDown, Filter
 } from 'lucide-react';
 import { useSuccessStories } from '@/hooks/use-success-stories';
 import { useAuth } from '@/hooks/use-auth';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { cn, formatDate } from '@/lib/utils';
 
 // Importing shadcn components
-import Sidebar from '@/components/admin/sidebar';
+import AdminLayout from '@/components/admin/admin-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -50,8 +49,6 @@ const AdminSuccessStories = () => {
   const [sortField, setSortField] = useState<string>('createdAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const { toast } = useToast();
-  const isMobile = useIsMobile();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isLoading: authLoading, isAuthenticated } = useAuth();
   
   // استخدام الهوك المحدث للحصول على قصص النجاح والوظائف المرتبطة بها
