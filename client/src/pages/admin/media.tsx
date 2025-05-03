@@ -581,14 +581,16 @@ export default function MediaManagementPage() {
                   <div className="relative">
                     {file.mimeType.startsWith('image/') ? (
                       <div 
-                        className="aspect-video bg-muted flex items-center justify-center overflow-hidden" 
-                        onClick={() => setSelectedFile(file)}
+                        className="aspect-video bg-muted flex items-center justify-center overflow-hidden cursor-pointer" 
+                        onClick={() => {
+                          setSelectedFile(file);
+                          setIsDetailsDialogOpen(true);
+                        }}
                       >
                         <img
                           src={file.url}
                           alt={file.alt || file.originalFilename}
-                          className="object-cover w-full h-full cursor-pointer"
-                          onClick={() => setIsDetailsDialogOpen(true)}
+                          className="object-cover w-full h-full"
                         />
                       </div>
                     ) : (
