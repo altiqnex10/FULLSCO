@@ -59,12 +59,20 @@ const CreateSuccessStory = () => {
   // Mutation for creating success story
   const createMutation = useMutation({
     mutationFn: async (data: SuccessStoryData) => {
+      // تحويل photo إلى imageUrl كما يتوقع الخادم
+      const payload = {
+        ...data,
+        imageUrl: data.photo, // تحويل photo إلى imageUrl
+      };
+      
+      console.log("بيانات قصة النجاح للإرسال:", payload);
+      
       const response = await fetch('/api/success-stories', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       
       if (!response.ok) {

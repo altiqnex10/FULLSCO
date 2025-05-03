@@ -52,16 +52,21 @@ const EditSuccessStory = () => {
       setError(null);
 
       // تحديث قصة النجاح
+      // تحويل featuredImage إلى imageUrl كما يتوقع الخادم إذا كان موجوداً
+      const payload = {
+        name: data.name,
+        title: data.title,
+        content: data.content,
+        scholarshipName: data.scholarshipName || null,
+        imageUrl: data.featuredImage || data.imageUrl || null, // دعم كلا من imageUrl و featuredImage
+        isPublished: data.isPublished,
+      };
+      
+      console.log("بيانات قصة النجاح للتحديث:", payload);
+      
       await updateStoryMutation.mutateAsync({
         id: storyId,
-        data: {
-          name: data.name,
-          title: data.title,
-          content: data.content,
-          scholarshipName: data.scholarshipName || null,
-          imageUrl: data.imageUrl || null,
-          isPublished: data.isPublished,
-        },
+        data: payload,
       });
 
       setSuccess(true);

@@ -120,10 +120,18 @@ export default function PagesManagementPage() {
   // إضافة صفحة جديدة
   const addMutation = useMutation({
     mutationFn: async (newPage: PageFormValues) => {
+      // تحويل featuredImage إلى imageUrl كما يتوقع الخادم
+      const payload = {
+        ...newPage,
+        imageUrl: newPage.featuredImage, // تحويل featuredImage إلى imageUrl
+      };
+      
+      console.log("بيانات الصفحة الجديدة للإرسال:", payload);
+      
       const response = await fetch('/api/pages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newPage),
+        body: JSON.stringify(payload),
         credentials: 'include'
       });
       
@@ -149,10 +157,19 @@ export default function PagesManagementPage() {
   const updateMutation = useMutation({
     mutationFn: async (updatedPage: PageFormValues & { id: number }) => {
       const { id, ...pageData } = updatedPage;
+      
+      // تحويل featuredImage إلى imageUrl كما يتوقع الخادم
+      const payload = {
+        ...pageData,
+        imageUrl: pageData.featuredImage, // تحويل featuredImage إلى imageUrl
+      };
+      
+      console.log("بيانات تحديث الصفحة للإرسال:", payload);
+      
       const response = await fetch(`/api/pages/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(pageData),
+        body: JSON.stringify(payload),
         credentials: 'include'
       });
       
