@@ -115,7 +115,7 @@ export default function CreateScholarshipPage() {
   const queryClient = useQueryClient();
   const [showExitAlert, setShowExitAlert] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const isMobile = useIsMobile();
+  const isMobile = useMobile();
   
   // استعلام عن الدول
   const { data: countries } = useQuery<any[]>({
@@ -170,6 +170,7 @@ export default function CreateScholarshipPage() {
     seoDescription: string | null;
     seoKeywords: string | null;
     focusKeyword: string | null;
+    imageUrl: string | null;
   };
 
   // استعلام عن بيانات المنحة الحالية عند التعديل
@@ -321,6 +322,7 @@ export default function CreateScholarshipPage() {
       seoDescription: '',
       seoKeywords: '',
       focusKeyword: '',
+      featuredImage: '',
     },
   });
   
@@ -439,6 +441,7 @@ export default function CreateScholarshipPage() {
         seoDescription: scholarshipData.seoDescription || '',
         seoKeywords: scholarshipData.seoKeywords || '',
         focusKeyword: scholarshipData.focusKeyword || '',
+        featuredImage: scholarshipData.imageUrl || '',
       });
     }
   }, [scholarshipData, isEditMode, form]);
@@ -967,7 +970,40 @@ export default function CreateScholarshipPage() {
                         </FormItem>
                       )}
                     />
-                    
+                  </div>
+                  
+                  {/* الصورة الرئيسية */}
+                  <FormField
+                    control={form.control}
+                    name="featuredImage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>الصورة الرئيسية</FormLabel>
+                        <FormControl>
+                          <div>
+                            <MediaSelector
+                              onSelect={(mediaFile) => {
+                                field.onChange(mediaFile.url);
+                              }}
+                              selectedUrl={field.value || ''}
+                              triggerButtonLabel="اختيار صورة من المكتبة"
+                              showPreview={true}
+                              previewSize="large"
+                              allowClear={true}
+                              onClear={() => field.onChange('')}
+                              onlyImages={true}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          اختر صورة رئيسية للمنحة الدراسية. ستظهر هذه الصورة في الصفحة الرئيسية وفي قوائم المنح.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="isPublished"
