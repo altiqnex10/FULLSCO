@@ -321,7 +321,7 @@ export default function CreatePage() {
                           <FormLabel>محتوى الصفحة</FormLabel>
                           <FormControl>
                             <RichEditor
-                              value={field.value}
+                              initialValue={field.value}
                               onChange={field.onChange}
                             />
                           </FormControl>

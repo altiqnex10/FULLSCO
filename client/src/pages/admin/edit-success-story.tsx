@@ -437,7 +437,7 @@ const EditSuccessStory = () => {
                       <FormLabel>محتوى قصة النجاح</FormLabel>
                       <FormControl>
                         <RichEditor
-                          value={field.value}
+                          initialValue={field.value}
                           onChange={field.onChange}
                         />
                       </FormControl>

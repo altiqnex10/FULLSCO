@@ -400,7 +400,7 @@ export default function EditPage() {
                           <FormLabel>محتوى الصفحة</FormLabel>
                           <FormControl>
                             <RichEditor
-                              value={field.value}
+                              initialValue={field.value}
                               onChange={field.onChange}
                             />
                           </FormControl>
