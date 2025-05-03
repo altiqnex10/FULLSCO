@@ -154,6 +154,10 @@ export default function RichEditor({
       Image.configure({
         inline: false,
         allowBase64: true,
+        HTMLAttributes: {
+          // إضافة فئات CSS للحفاظ على استقرار الصور
+          class: 'rich-editor-image',
+        },
       }),
       Link.configure({
         openOnClick: false,
@@ -664,15 +668,31 @@ export default function RichEditor({
   const handleMediaSelect = useCallback((mediaFile: MediaFile) => {
     if (!editor) return;
     
+    // تحسين معالجة الصور مع تأكيد أن URL الصورة كامل
+    const imageUrl = mediaFile.url.startsWith('/') 
+      ? mediaFile.url // استخدم المسار كما هو إذا كان مطلقًا
+      : `/${mediaFile.url}`; // وإلا أضف / في البداية
+    
+    console.log('إضافة صورة:', {
+      originalUrl: mediaFile.url,
+      processedUrl: imageUrl,
+      altText: mediaFile.alt || mediaFile.title || mediaFile.originalFilename || 'صورة'
+    });
+    
     editor
       .chain()
       .focus()
       .setImage({ 
-        src: mediaFile.url, 
+        src: imageUrl, 
         alt: mediaFile.alt || mediaFile.title || mediaFile.originalFilename || 'صورة' 
       })
       .run();
-  }, [editor]);
+      
+    // تأكيد أن المحتوى حُفظ
+    const html = editor.getHTML();
+    setContent(html);
+    onChange(html);
+  }, [editor, onChange]);
   
   // التعامل مع اتجاه النص
   const changeDirection = useCallback((newDir: 'rtl' | 'ltr') => {

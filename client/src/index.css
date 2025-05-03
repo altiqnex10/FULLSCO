@@ -393,6 +393,21 @@
   transform: scaleX(-1);
 }
 
+/* تحسينات صور محرر النصوص الغني */
+.rich-editor-image {
+  max-width: 100%;
+  height: auto;
+  margin: 1rem 0;
+  border-radius: 0.375rem;
+  display: block;
+}
+
+/* إضافة إطار للصور عند تحديدها في المحرر */
+.ProseMirror-selectednode img {
+  outline: 2px solid hsl(var(--primary));
+  border-radius: 0.375rem;
+}
+
 /* ضبط اتجاه النص والمكونات */
 [dir="rtl"] .link-hover::after {
   right: 0;
