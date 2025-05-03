@@ -205,12 +205,14 @@ export default function CreateScholarshipPage() {
   // إضافة منحة جديدة
   const addScholarshipMutation = useMutation({
     mutationFn: async (scholarshipData: ScholarshipFormValues) => {
-      // تحويل ID إلى أرقام
+      // تحويل ID إلى أرقام وعالج التواريخ
       const payload = {
         ...scholarshipData,
         countryId: parseInt(scholarshipData.countryId),
         levelId: parseInt(scholarshipData.levelId),
         categoryId: parseInt(scholarshipData.categoryId),
+        startDate: scholarshipData.startDate ? new Date(scholarshipData.startDate) : null,
+        endDate: scholarshipData.endDate ? new Date(scholarshipData.endDate) : null,
       };
       
       const response = await fetch('/api/scholarships', {
@@ -253,12 +255,14 @@ export default function CreateScholarshipPage() {
       console.log("بيانات المنحة قبل الإرسال:", scholarshipData);
       console.log("محتوى المنحة:", scholarshipData.content);
       
-      // تحويل ID إلى أرقام
+      // تحويل ID إلى أرقام وعالج التواريخ
       const payload = {
         ...scholarshipData,
         countryId: parseInt(scholarshipData.countryId),
         levelId: parseInt(scholarshipData.levelId),
         categoryId: parseInt(scholarshipData.categoryId),
+        startDate: scholarshipData.startDate ? new Date(scholarshipData.startDate) : null,
+        endDate: scholarshipData.endDate ? new Date(scholarshipData.endDate) : null,
       };
       
       console.log("البيانات التي سيتم إرسالها:", payload);
