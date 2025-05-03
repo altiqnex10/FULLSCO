@@ -22,7 +22,7 @@ import AdminLevels from "@/pages/admin/levels";
 import AdminCountries from "@/pages/admin/countries";
 import AdminSiteSettings from "@/pages/admin/site-settings"; // نستخدم واجهة واحدة فقط لإعدادات الموقع
 import AdminPages from "@/pages/admin/pages";
-import AdminPagesNew from "@/pages/admin/pages-new";
+
 import AdminMenus from "@/pages/admin/menus-new";
 import AdminMedia from "@/pages/admin/media";
 import AdminRoles from "@/pages/admin/roles";
