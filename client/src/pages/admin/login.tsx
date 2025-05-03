@@ -33,7 +33,7 @@ export default function Login() {
   // سنستخدم useEffect بدلاً من القيام بعملية التوجيه المباشر
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/admin');
+      navigate('/admin/dashboard');
     }
   }, [isAuthenticated, navigate]);
   
