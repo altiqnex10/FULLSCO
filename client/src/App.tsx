@@ -46,6 +46,7 @@ import AdminAppearance from "@/pages/admin/appearance";
 import AdminMessages from "@/pages/admin/messages";
 import CreateSuccessStory from "@/pages/admin/create-success-story";
 import EditSuccessStory from "@/pages/admin/edit-success-story";
+import TempPage from "@/pages/admin/temp";
 
 import Header from "@/components/header";
 import Footer from "@/components/footer";
@@ -159,6 +160,7 @@ function App() {
                     <Route path="/admin/home-layout" component={AdminHomeLayout} />
                     <Route path="/admin/appearance" component={AdminAppearance} />
                     <Route path="/admin/messages" component={AdminMessages} />
+                    <Route path="/admin/temp" component={TempPage} />
                     
                     {/* Fallback to 404 */}
                     <Route component={NotFound} />

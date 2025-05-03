@@ -13,7 +13,7 @@ export default function TempPage() {
   };
   
   return (
-    <AdminLayout>
+    <AdminLayout title="اختبار محرر النص الغني">
       <div className="container mx-auto py-6">
         <h1 className="text-2xl font-bold mb-6">صفحة اختبار محرر النص الغني</h1>
         
