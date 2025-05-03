@@ -125,43 +125,99 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
           "w-full max-w-full" // إضافة عرض كامل للشاشة
         )}
       >
-        {/* الهيدر (مبسط) */}
-        <header className="sticky top-0 z-30 border-b bg-background/95 dark:bg-gray-900/95 backdrop-blur supports-backdrop-blur:bg-background/60 py-2 px-3 shadow-sm w-full">
+        {/* الهيدر */}
+        <header className="sticky top-0 z-30 border-b bg-background/95 dark:bg-gray-900/95 backdrop-blur supports-backdrop-blur:bg-background/60 py-3 px-3 md:px-4 shadow-sm w-full">
           <div className="flex items-center justify-between w-full mx-auto">
-            <div className="flex items-center">
+            <div className="flex items-center gap-2">
               {isMobile && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="mr-1"
+                  className="ml-2"
                   onClick={() => setSidebarOpen(true)}
                   aria-label="فتح القائمة"
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
               )}
-              <Link href="/" className="mr-auto">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="h-8"
-                >
-                  <Home className="h-4 w-4 ml-1.5" />
-                  <span className="text-xs">الرئيسية</span>
-                </Button>
-              </Link>
+              <h1 className="text-lg md:text-xl font-bold truncate">{title}</h1>
             </div>
             
-            {/* زر تسجيل الخروج فقط */}
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="h-8 px-2 text-xs"
-              onClick={handleLogout}
-            >
-              <LogOut className="ml-1.5 h-4 w-4" />
-              تسجيل الخروج
-            </Button>
+            <div className="flex items-center gap-1 md:gap-2">  
+              {/* زر تبديل الثيم */}
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={toggleTheme}
+                className="md:ml-1"
+                title={theme === 'light' ? 'الوضع المظلم' : 'الوضع المضيء'}
+              >
+                {theme === 'light' ? <Moon className="h-[1.2rem] w-[1.2rem]" /> : <Sun className="h-[1.2rem] w-[1.2rem]" />}
+              </Button>
+              
+              {/* قائمة المستخدم */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                        {user && typeof user === 'object' ? (user.username || 'AD').substring(0, 2).toUpperCase() : 'AD'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col">
+                      <span>{user && typeof user === 'object' && user.fullName ? user.fullName : 'مدير النظام'}</span>
+                      <span className="text-xs font-normal text-muted-foreground">
+                        {user && typeof user === 'object' && user.email ? user.email : 'admin@fullsco.com'}
+                      </span>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="flex items-center cursor-pointer"
+                    onClick={() => navigate('/admin/profile')}
+                  >
+                    <User className="ml-2 h-4 w-4" />
+                    الملف الشخصي
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="flex items-center cursor-pointer"
+                    onClick={() => navigate('/admin/site-settings')}
+                  >
+                    <Settings className="ml-2 h-4 w-4" />
+                    إعدادات الموقع
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/" className="flex items-center cursor-pointer">
+                      <Home className="ml-2 h-4 w-4" />
+                      العودة للموقع
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="flex items-center text-red-500 hover:text-red-500 cursor-pointer"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="ml-2 h-4 w-4" />
+                    تسجيل الخروج
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              {/* زر وشريط الإجراءات - إذا كانت موجودة */}
+              {actions && (
+                <>
+                  <Separator orientation="vertical" className="h-6 mx-1 md:mx-2 hidden sm:block" />
+                  <div className="flex items-center sm:gap-2">
+                    {actions}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </header>
 
