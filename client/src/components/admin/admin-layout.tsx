@@ -104,7 +104,7 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
   // تم إزالة قائمة الإجراءات السريعة حيث أصبحت أزرار الإضافة موجودة داخل كل صفحة
 
   return (
-    <div className={`min-h-screen bg-background dark:bg-gray-900 flex text-foreground dark:text-gray-100`} dir="rtl">
+    <div className={`min-h-screen bg-background dark:bg-gray-900 flex text-foreground dark:text-gray-100`}>
       {/* السايدبار - الإصدار الحالي */}
       <Sidebar 
         isMobileOpen={sidebarOpen} 
@@ -115,7 +115,7 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
       <main 
         className={cn(
           "flex-1 min-h-screen transition-all duration-300 flex flex-col",
-          !isMobile && "mr-64",
+          !isMobile && (document.dir === "rtl" ? "mr-64" : "ml-64"),
           "w-full max-w-full" // إضافة عرض كامل للشاشة
         )}
       >
@@ -127,7 +127,7 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="ml-2"
+                  className={document.dir === "rtl" ? "ml-2" : "mr-2"}
                   onClick={() => setSidebarOpen(true)}
                   aria-label="فتح القائمة"
                 >
@@ -160,7 +160,7 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuContent align={document.dir === "rtl" ? "end" : "start"} className="w-56">
                   <DropdownMenuLabel>
                     <div className="flex flex-col">
                       <span>{user && typeof user === 'object' && user.fullName ? user.fullName : 'مدير النظام'}</span>
@@ -174,20 +174,20 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
                     className="flex items-center cursor-pointer"
                     onClick={() => navigate('/admin/profile')}
                   >
-                    <User className="ml-2 h-4 w-4" />
+                    <User className={`${document.dir === 'rtl' ? 'ml-2' : 'mr-2'} h-4 w-4`} />
                     الملف الشخصي
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="flex items-center cursor-pointer"
                     onClick={() => navigate('/admin/site-settings')}
                   >
-                    <Settings className="ml-2 h-4 w-4" />
+                    <Settings className={`${document.dir === 'rtl' ? 'ml-2' : 'mr-2'} h-4 w-4`} />
                     إعدادات الموقع
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link href="/" className="flex items-center cursor-pointer">
-                      <Home className="ml-2 h-4 w-4" />
+                      <Home className={`${document.dir === 'rtl' ? 'ml-2' : 'mr-2'} h-4 w-4`} />
                       العودة للموقع
                     </Link>
                   </DropdownMenuItem>
@@ -196,7 +196,7 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
                     className="flex items-center text-red-500 hover:text-red-500 cursor-pointer"
                     onClick={handleLogout}
                   >
-                    <LogOut className="ml-2 h-4 w-4" />
+                    <LogOut className={`${document.dir === 'rtl' ? 'ml-2' : 'mr-2'} h-4 w-4`} />
                     تسجيل الخروج
                   </DropdownMenuItem>
                 </DropdownMenuContent>
