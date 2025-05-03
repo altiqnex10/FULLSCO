@@ -252,6 +252,16 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
                 <span className="text-xs">المنح</span>
               </Button>
               
+              <div className="-mt-8">
+                <Button 
+                  size="lg" 
+                  className="h-14 w-14 rounded-full shadow-lg flex items-center justify-center"
+                  onClick={() => navigate('/admin/scholarships/create')}
+                >
+                  <Plus className="h-7 w-7" />
+                </Button>
+              </div>
+              
               <Button 
                 variant="ghost" 
                 size="sm" 
