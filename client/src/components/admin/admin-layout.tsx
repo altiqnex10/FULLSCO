@@ -121,12 +121,13 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
       <main 
         className={cn(
           "flex-1 min-h-screen transition-all duration-300 flex flex-col",
-          !isMobile && "mr-64"
+          !isMobile && "mr-64",
+          "w-full max-w-full" // إضافة عرض كامل للشاشة
         )}
       >
         {/* الهيدر */}
-        <header className="sticky top-0 z-30 border-b bg-background/95 dark:bg-gray-900/95 backdrop-blur supports-backdrop-blur:bg-background/60 py-3 px-3 md:px-4 shadow-sm">
-          <div className="flex items-center justify-between max-w-full mx-auto">
+        <header className="sticky top-0 z-30 border-b bg-background/95 dark:bg-gray-900/95 backdrop-blur supports-backdrop-blur:bg-background/60 py-3 px-3 md:px-4 shadow-sm w-full">
+          <div className="flex items-center justify-between w-full mx-auto">
             <div className="flex items-center gap-2">
               {isMobile && (
                 <Button
@@ -139,7 +140,7 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
                   <Menu className="h-5 w-5" />
                 </Button>
               )}
-              <h1 className="text-xl md:text-2xl font-bold truncate">{title}</h1>
+              <h1 className="text-lg md:text-xl font-bold truncate">{title}</h1>
             </div>
             
             <div className="flex items-center gap-1 md:gap-2">
@@ -385,7 +386,7 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
           // إضافة مساحة أسفل الصفحة عند وجود شريط التنقل السفلي للجوال
           isMobile && "pb-20"
         )}>
-          <div className="max-w-full overflow-x-hidden px-1">
+          <div className="w-full max-w-full min-w-0 mx-auto">
             {children}
           </div>
         </div>

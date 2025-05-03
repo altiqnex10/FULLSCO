@@ -275,7 +275,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
         className={cn(
           "bg-background dark:bg-gray-900 flex flex-col border-r dark:border-gray-800 shadow-lg z-50 transition-all duration-300 ease-in-out",
           isMobile 
-            ? "fixed inset-y-0 right-0 w-74 transform" 
+            ? "fixed inset-y-0 right-0 w-full max-w-[300px] transform" 
             : isCompact 
               ? "w-[66px]" 
               : "w-64 h-screen sticky top-0"
