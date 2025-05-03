@@ -174,10 +174,18 @@ export default function CreatePostPage() {
   // إضافة مقال جديد
   const addPostMutation = useMutation({
     mutationFn: async (newPost: PostFormValues) => {
+      // تحويل featuredImage إلى imageUrl كما يتوقع الخادم
+      const payload = {
+        ...newPost,
+        imageUrl: newPost.featuredImage, // تحويل featuredImage إلى imageUrl
+      };
+      
+      console.log("بيانات المقال الجديد:", payload);
+      
       const response = await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newPost),
+        body: JSON.stringify(payload),
       });
       
       if (!response.ok) {
@@ -265,10 +273,18 @@ export default function CreatePostPage() {
       console.log("بيانات المقال قبل الإرسال:", postData);
       console.log("محتوى المقال:", postData.content);
       
+      // تحويل featuredImage إلى imageUrl كما يتوقع الخادم
+      const payload = {
+        ...postData,
+        imageUrl: postData.featuredImage, // تحويل featuredImage إلى imageUrl
+      };
+      
+      console.log("البيانات التي سيتم إرسالها:", payload);
+      
       const response = await fetch(`/api/posts/${postId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(postData),
+        body: JSON.stringify(payload),
       });
       
       if (!response.ok) {
