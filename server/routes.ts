@@ -1391,17 +1391,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'No file uploaded' });
       }
 
-      // Create the server URL based on request
-      const protocol = req.protocol;
-      const host = req.get('host');
-      const baseUrl = `${protocol}://${host}`;
-      
       // Process the uploaded file
       const file = req.file;
+      
+      // Use relative URL instead of absolute URL to avoid server-specific paths
       const fileData = {
         filename: file.filename,
         originalFilename: file.originalname,
-        url: `${baseUrl}/uploads/${file.filename}`,
+        url: `/uploads/${file.filename}`,
         mimeType: file.mimetype,
         size: file.size,
         title: req.body.title || file.originalname,
