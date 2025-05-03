@@ -25,7 +25,9 @@ interface MediaFile {
 }
 
 interface MediaSelectorProps {
-  onSelect: (mediaFile: MediaFile) => void;
+  onSelect?: (mediaFile: MediaFile) => void;
+  onChange?: (url: string) => void;
+  value?: string;
   selectedUrl?: string;
   triggerButtonLabel?: string;
   triggerButtonIcon?: React.ReactNode;
@@ -39,6 +41,8 @@ interface MediaSelectorProps {
 
 export default function MediaSelector({
   onSelect,
+  onChange,
+  value,
   selectedUrl,
   triggerButtonLabel = 'اختر ملف وسائط',
   triggerButtonIcon = <Image className="ml-2 h-4 w-4" />,
@@ -94,29 +98,48 @@ export default function MediaSelector({
   // عند اختيار ملف
   const handleSelect = (file: MediaFile) => {
     setSelectedFile(file);
-    onSelect(file);
+    
+    // دعم كلا من onSelect و onChange
+    if (onSelect) {
+      onSelect(file);
+    }
+    
+    if (onChange) {
+      onChange(file.url);
+    }
+    
     setIsOpen(false);
   };
   
   // عند مسح الملف المحدد
   const handleClear = () => {
     setSelectedFile(null);
+    
+    // دعم كل من onClear و onChange
     if (onClear) {
       onClear();
     }
+    
+    // إذا كان هناك دالة onChange، قم بتمرير قيمة فارغة لها
+    if (onChange) {
+      onChange("");
+    }
   };
   
-  // تعيين الملف المحدد عند تغيير العنوان المحدد
+  // تعيين الملف المحدد عند تغيير العنوان المحدد أو القيمة
   useEffect(() => {
-    if (selectedUrl && mediaFiles) {
-      const file = mediaFiles.find(f => f.url === selectedUrl);
+    // استخدم value إذا كان متاحًا، وإلا استخدم selectedUrl
+    const urlToCheck = value || selectedUrl;
+    
+    if (urlToCheck && mediaFiles) {
+      const file = mediaFiles.find(f => f.url === urlToCheck);
       if (file) {
         setSelectedFile(file);
       }
     } else {
       setSelectedFile(null);
     }
-  }, [selectedUrl, mediaFiles]);
+  }, [selectedUrl, value, mediaFiles]);
 
   return (
     <div className={className}>
