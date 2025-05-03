@@ -29,6 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
   PlusCircle,
+  Plus,
   Search,
   Edit,
   Trash2,
