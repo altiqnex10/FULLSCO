@@ -46,7 +46,8 @@ import {
   Bookmark,
   Check,
   BookOpen,
-  Star
+  Star,
+  LayoutGrid
 } from "lucide-react";
 import { Scholarship, Country, Level, Category } from "@shared/schema";
 import { useIsMobile } from "@/hooks/use-mobile";
