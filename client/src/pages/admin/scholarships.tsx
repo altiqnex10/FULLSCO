@@ -502,37 +502,37 @@ const AdminScholarships = () => {
         <span>المنح الدراسية</span>
       </div>
     }>
-      <div className="space-y-4 max-w-full px-0 md:px-0 lg:px-0">
+      <div className="space-y-3 w-full max-w-full mx-auto">
         {/* نظرة عامة عن المنح الدراسية والإحصائيات */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-4">
+        <div className="grid grid-cols-3 gap-1.5">
           <Card className="overflow-hidden">
-            <CardHeader className="pb-2 px-3 py-3">
-              <CardTitle className="text-sm md:text-base flex items-center">
-                <Award className="h-4 w-4 text-primary ml-2" />
+            <CardHeader className="pb-1 px-2 py-2">
+              <CardTitle className="text-xs md:text-sm flex items-center">
+                <Award className="h-3.5 w-3.5 text-primary ml-1.5" />
                 إجمالي المنح
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-3 py-1">
+            <CardContent className="px-2 py-1">
               {isLoading ? (
                 <Skeleton className="h-6 w-16" />
               ) : (
-                <div className="text-xl md:text-2xl font-bold">{scholarships?.length || 0}</div>
+                <div className="text-lg md:text-xl font-bold">{scholarships?.length || 0}</div>
               )}
             </CardContent>
           </Card>
 
           <Card className="overflow-hidden">
-            <CardHeader className="pb-2 px-3 py-3">
-              <CardTitle className="text-sm md:text-base flex items-center">
-                <Star className="h-4 w-4 text-amber-500 ml-2" />
+            <CardHeader className="pb-1 px-2 py-2">
+              <CardTitle className="text-xs md:text-sm flex items-center">
+                <Star className="h-3.5 w-3.5 text-amber-500 ml-1.5" />
                 المنح المميزة
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-3 py-1">
+            <CardContent className="px-2 py-1">
               {isLoading ? (
                 <Skeleton className="h-6 w-16" />
               ) : (
-                <div className="text-xl md:text-2xl font-bold">
+                <div className="text-lg md:text-xl font-bold">
                   {scholarships?.filter(s => s.isFeatured).length || 0}
                 </div>
               )}
@@ -540,17 +540,17 @@ const AdminScholarships = () => {
           </Card>
 
           <Card className="overflow-hidden">
-            <CardHeader className="pb-2 px-3 py-3">
-              <CardTitle className="text-sm md:text-base flex items-center">
-                <Globe className="h-4 w-4 text-blue-500 ml-2" />
+            <CardHeader className="pb-1 px-2 py-2">
+              <CardTitle className="text-xs md:text-sm flex items-center">
+                <Globe className="h-3.5 w-3.5 text-blue-500 ml-1.5" />
                 الدول
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-3 py-1">
+            <CardContent className="px-2 py-1">
               {isLoading ? (
                 <Skeleton className="h-6 w-16" />
               ) : (
-                <div className="text-xl md:text-2xl font-bold">
+                <div className="text-lg md:text-xl font-bold">
                   {countries?.length || 0}
                 </div>
               )}
@@ -559,24 +559,24 @@ const AdminScholarships = () => {
         </div>
 
         {/* قسم البحث */}
-        <div className="flex flex-col sm:flex-row justify-between gap-2 items-center">
+        <div className="flex flex-col sm:flex-row justify-between gap-2 items-center w-full">
           <div className="relative w-full sm:w-64">
-            <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute right-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               placeholder="ابحث عن المنح..."
-              className="pr-10"
+              className="pr-8 h-9 text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
-          <div className="flex items-center text-sm text-muted-foreground mt-2 sm:mt-0">
+          <div className="flex items-center text-xs text-muted-foreground mt-1 sm:mt-0">
             <span className="whitespace-nowrap">{filteredScholarships.length} من {scholarships?.length || 0}</span>
             {activeFilterCount > 0 && (
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="ml-2 h-8 text-xs"
+                className="ml-1 h-7 text-xs px-2"
                 onClick={clearFilters}
               >
                 مسح
@@ -614,7 +614,80 @@ const AdminScholarships = () => {
             <p className="text-muted-foreground">يرجى المحاولة مرة أخرى لاحقًا.</p>
           </div>
         ) : filteredScholarships.length > 0 ? (
-          viewMode === "table" ? (
+          isMobile ? (
+            // عرض البطاقات على الجوال دائماً
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {filteredScholarships.map((scholarship) => (
+                <Card key={scholarship.id} className="overflow-hidden border rounded-md">
+                  <CardHeader className="pb-1 px-2 py-2">
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-xs line-clamp-1">
+                        {scholarship.title}
+                      </CardTitle>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 -mt-1 -mr-1">
+                            <MoreHorizontal className="h-3.5 w-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem 
+                            onClick={() => navigate(`/admin/scholarships/edit/${scholarship.id}`)}
+                            className="text-xs py-1.5"
+                          >
+                            <Edit className="ml-1.5 h-3.5 w-3.5" />
+                            تعديل
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => window.open(`/scholarships/${scholarship.slug}`, '_blank')}
+                            className="text-xs py-1.5"
+                          >
+                            <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                            عرض
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="text-destructive focus:text-destructive text-xs py-1.5"
+                            onClick={() => handleDeleteClick(scholarship.id)}
+                          >
+                            <Trash2 className="ml-1.5 h-3.5 w-3.5" />
+                            حذف
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="px-2 py-1 mb-0.5">
+                    <div className="flex flex-wrap gap-1 mb-1.5">
+                      {scholarship.isFeatured && (
+                        <Badge className="bg-amber-500/10 border-amber-200 text-amber-700 text-[9px] h-4 rounded-sm">
+                          <Star className="h-2.5 w-2.5 ml-1 fill-amber-500 text-amber-500" />
+                          مميز
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className="gap-1 text-muted-foreground text-[9px] h-4 rounded-sm">
+                        <MapPin className="h-2.5 w-2.5" />
+                        {getCountryName(scholarship.countryId)}
+                      </Badge>
+                      <Badge variant="outline" className="gap-1 text-muted-foreground text-[9px] h-4 rounded-sm">
+                        <GraduationCap className="h-2.5 w-2.5" />
+                        {getLevelName(scholarship.levelId)}
+                      </Badge>
+                    </div>
+                    <div className="text-[9px] text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-2.5 w-2.5 flex-shrink-0" />
+                      <span className="truncate">
+                        {scholarship.deadline ? 
+                          `آخر موعد: ${scholarship.deadline}` : 
+                          "مستمر التقديم"
+                        }
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : viewMode === "table" ? (
             <div className="bg-card border rounded-md overflow-hidden">
               <div className="overflow-x-auto -mx-3 sm:mx-0">
                 <Table className="min-w-full sm:min-w-0">
