@@ -427,7 +427,6 @@ export default function MediaManagementPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full md:w-96"
-              prefix={<Search className="h-4 w-4 text-muted-foreground" />}
             />
             
             <DropdownMenu>
