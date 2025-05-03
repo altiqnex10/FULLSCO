@@ -27,6 +27,7 @@ import MemoryStore from "memorystore";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import sizeOf from "image-size";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up uploads directory
@@ -52,7 +53,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   const upload = multer({ 
     storage: multerStorage,
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: function (req, file, cb) {
+      // تحقق من أن الملف صورة صالحة
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('الملف المرفوع ليس صورة!') as any, false);
+      }
+    }
   });
 
   // Set up authentication
@@ -1394,6 +1403,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Process the uploaded file
       const file = req.file;
       
+      // استخراج أبعاد الصورة إذا كانت الملف هو صورة
+      let width = null;
+      let height = null;
+      
+      if (file.mimetype.startsWith('image/')) {
+        try {
+          const filePath = path.join(uploadsDir, file.filename);
+          const dimensions = sizeOf(filePath);
+          width = dimensions.width;
+          height = dimensions.height;
+          console.log(`Image dimensions: ${width}x${height}`);
+        } catch (err) {
+          console.error("Error getting image dimensions:", err);
+          // استمر في المعالجة حتى لو لم يتم استخراج الأبعاد
+        }
+      }
+      
       // Use relative URL instead of absolute URL to avoid server-specific paths
       const fileData = {
         filename: file.filename,
@@ -1401,6 +1427,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         url: `/uploads/${file.filename}`,
         mimeType: file.mimetype,
         size: file.size,
+        width,
+        height,
         title: req.body.title || file.originalname,
         alt: req.body.alt || ''
       };
