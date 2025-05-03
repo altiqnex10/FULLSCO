@@ -502,84 +502,72 @@ const AdminScholarships = () => {
         <span>المنح الدراسية</span>
       </div>
     }>
-      <div className="space-y-2 w-full px-0.5 mx-auto">
+      <div className="w-full mx-auto">
         {/* نظرة عامة عن المنح الدراسية والإحصائيات */}
-        <div className="grid grid-cols-3 gap-1">
-          <Card className="overflow-hidden">
-            <CardHeader className="pb-0 px-2 py-1.5">
-              <CardTitle className="text-xs flex items-center">
-                <Award className="h-3 w-3 text-primary ml-1" />
-                إجمالي المنح
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-2 py-1">
-              {isLoading ? (
-                <Skeleton className="h-5 w-12" />
-              ) : (
-                <div className="text-base font-medium">{scholarships?.length || 0}</div>
-              )}
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-3 gap-1 mb-2">
+          <div className="flex flex-col items-center justify-center bg-muted/50 rounded-md p-1">
+            <div className="flex items-center justify-center">
+              <Award className="h-3 w-3 text-primary ml-1" />
+              <span className="text-xs">إجمالي المنح</span>
+            </div>
+            {isLoading ? (
+              <Skeleton className="h-4 w-8 mt-1" />
+            ) : (
+              <div className="text-sm font-semibold mt-0.5">{scholarships?.length || 0}</div>
+            )}
+          </div>
 
-          <Card className="overflow-hidden">
-            <CardHeader className="pb-0 px-2 py-1.5">
-              <CardTitle className="text-xs flex items-center">
-                <Star className="h-3 w-3 text-amber-500 ml-1" />
-                المنح المميزة
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-2 py-1">
-              {isLoading ? (
-                <Skeleton className="h-5 w-12" />
-              ) : (
-                <div className="text-base font-medium">
-                  {scholarships?.filter(s => s.isFeatured).length || 0}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <div className="flex flex-col items-center justify-center bg-amber-50 rounded-md p-1">
+            <div className="flex items-center justify-center">
+              <Star className="h-3 w-3 text-amber-500 ml-1" />
+              <span className="text-xs">المنح المميزة</span>
+            </div>
+            {isLoading ? (
+              <Skeleton className="h-4 w-8 mt-1" />
+            ) : (
+              <div className="text-sm font-semibold mt-0.5">
+                {scholarships?.filter(s => s.isFeatured).length || 0}
+              </div>
+            )}
+          </div>
 
-          <Card className="overflow-hidden">
-            <CardHeader className="pb-0 px-2 py-1.5">
-              <CardTitle className="text-xs flex items-center">
-                <Globe className="h-3 w-3 text-blue-500 ml-1" />
-                الدول
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-2 py-1">
-              {isLoading ? (
-                <Skeleton className="h-5 w-12" />
-              ) : (
-                <div className="text-base font-medium">
-                  {countries?.length || 0}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <div className="flex flex-col items-center justify-center bg-blue-50 rounded-md p-1">
+            <div className="flex items-center justify-center">
+              <Globe className="h-3 w-3 text-blue-500 ml-1" />
+              <span className="text-xs">الدول</span>
+            </div>
+            {isLoading ? (
+              <Skeleton className="h-4 w-8 mt-1" />
+            ) : (
+              <div className="text-sm font-semibold mt-0.5">
+                {countries?.length || 0}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* قسم البحث */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-1 mt-2">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute right-2 top-2 h-3.5 w-3.5 text-muted-foreground" />
+        <div className="flex justify-between items-center gap-1 mb-2 bg-card px-1.5 py-1 border rounded-md">
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute right-1.5 top-1.5 h-3 w-3 text-muted-foreground" />
             <Input
               placeholder="ابحث عن المنح..."
-              className="pr-7 h-8 text-xs"
+              className="pr-6 h-6 text-xs min-h-0"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
-          <div className="flex items-center text-xs text-muted-foreground mt-1 sm:mt-0 shrink-0">
-            <span className="whitespace-nowrap">{filteredScholarships.length} من {scholarships?.length || 0}</span>
+          <div className="flex items-center text-[10px] text-muted-foreground shrink-0 ml-0.5">
+            <span className="whitespace-nowrap">{filteredScholarships.length}/{scholarships?.length || 0}</span>
             {activeFilterCount > 0 && (
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="ml-1 h-6 text-xs px-1.5"
+                className="ml-0.5 h-5 text-[10px] px-1 min-w-0"
                 onClick={clearFilters}
               >
-                مسح
+                <X className="h-3 w-3" />
               </Button>
             )}
           </div>
@@ -616,33 +604,33 @@ const AdminScholarships = () => {
         ) : filteredScholarships.length > 0 ? (
           isMobile ? (
             // عرض البطاقات على الجوال دائماً
-            <div className="px-0">
+            <div className="grid grid-cols-2 gap-1.5">
               {filteredScholarships.map((scholarship) => (
-                <div key={scholarship.id} className="border rounded-md mb-2 bg-card overflow-hidden">
-                  <div className="p-3 pt-2 pb-2 relative">
-                    <h3 className="font-medium text-sm pr-9 truncate">
+                <div key={scholarship.id} className="border rounded-md bg-card overflow-hidden">
+                  <div className="p-2 relative">
+                    <h3 className="text-[11px] font-medium pr-5 truncate">
                       {scholarship.title}
                     </h3>
                     
-                    <div className="flex flex-wrap gap-1 mt-1.5">
+                    <div className="flex flex-wrap gap-1 mt-1">
                       {scholarship.isFeatured && (
-                        <Badge className="bg-amber-500/10 border-amber-200 text-amber-700 h-5 text-xs">
-                          <Star className="h-3 w-3 ml-1 fill-amber-500 text-amber-500" />
+                        <div className="inline-flex items-center text-[9px] text-amber-700 bg-amber-50 py-0.5 px-1 rounded">
+                          <Star className="h-2 w-2 ml-0.5 fill-amber-500 text-amber-500" />
                           مميز
-                        </Badge>
+                        </div>
                       )}
-                      <Badge variant="outline" className="gap-1 text-muted-foreground h-5 text-xs">
-                        <MapPin className="h-3 w-3" />
+                      <div className="inline-flex items-center text-[9px] text-muted-foreground bg-muted/40 py-0.5 px-1 rounded">
+                        <MapPin className="h-2 w-2 ml-0.5" />
                         {getCountryName(scholarship.countryId)}
-                      </Badge>
-                      <Badge variant="outline" className="gap-1 text-muted-foreground h-5 text-xs">
-                        <GraduationCap className="h-3 w-3" />
+                      </div>
+                      <div className="inline-flex items-center text-[9px] text-muted-foreground bg-muted/40 py-0.5 px-1 rounded">
+                        <GraduationCap className="h-2 w-2 ml-0.5" />
                         {getLevelName(scholarship.levelId)}
-                      </Badge>
+                      </div>
                     </div>
                     
-                    <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1.5">
-                      <Clock className="h-3 w-3 flex-shrink-0" />
+                    <div className="text-[9px] text-muted-foreground flex items-center mt-1">
+                      <Clock className="h-2 w-2 flex-shrink-0 ml-0.5" />
                       <span className="truncate">
                         {scholarship.deadline ? 
                           `آخر موعد: ${scholarship.deadline}` : 
@@ -651,64 +639,63 @@ const AdminScholarships = () => {
                       </span>
                     </div>
                     
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-7 w-7 p-0 absolute top-1 left-1 opacity-80"
-                      asChild
-                    >
+                    <div className="absolute top-1 left-1">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <div>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-5 w-5 p-0"
+                          >
+                            <MoreHorizontal className="h-3 w-3" />
+                          </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-32">
+                        <DropdownMenuContent align="end" className="w-24">
                           <DropdownMenuItem 
                             onClick={() => navigate(`/admin/scholarships/edit/${scholarship.id}`)}
-                            className="text-xs py-1.5"
+                            className="text-[10px] py-1"
                           >
-                            <Edit className="ml-1.5 h-3.5 w-3.5" />
+                            <Edit className="ml-1 h-2.5 w-2.5" />
                             تعديل
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => window.open(`/scholarships/${scholarship.slug}`, '_blank')}
-                            className="text-xs py-1.5"
+                            className="text-[10px] py-1"
                           >
-                            <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                            <ExternalLink className="ml-1 h-2.5 w-2.5" />
                             عرض
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
-                            className="text-destructive focus:text-destructive text-xs py-1.5"
+                            className="text-destructive focus:text-destructive text-[10px] py-1"
                             onClick={() => handleDeleteClick(scholarship.id)}
                           >
-                            <Trash2 className="ml-1.5 h-3.5 w-3.5" />
+                            <Trash2 className="ml-1 h-2.5 w-2.5" />
                             حذف
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </Button>
+                    </div>
                   </div>
                   
-                  <div className="flex border-t py-1 px-2 bg-muted/30 gap-2 justify-end">
+                  <div className="flex border-t py-0.5 px-1 bg-muted/30 justify-end gap-1">
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      className="h-6 px-2 text-xs text-destructive"
+                      className="h-5 px-1 text-[9px] min-w-0 text-destructive"
                       onClick={() => handleDeleteClick(scholarship.id)}
                     >
-                      <Trash2 className="ml-1 h-3 w-3" />
-                      <span className="mt-px">حذف</span>
+                      <Trash2 className="h-2.5 w-2.5 ml-0.5" />
+                      حذف
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      className="h-6 px-2 text-xs"
+                      className="h-5 px-1 text-[9px] min-w-0"
                       onClick={() => navigate(`/admin/scholarships/edit/${scholarship.id}`)}
                     >
-                      <Edit className="ml-1 h-3 w-3" />
-                      <span className="mt-px">تعديل</span>
+                      <Edit className="h-2.5 w-2.5 ml-0.5" />
+                      تعديل
                     </Button>
                   </div>
                 </div>
