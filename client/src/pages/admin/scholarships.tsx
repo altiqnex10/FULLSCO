@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDate, cn } from "@/lib/utils";
-import Sidebar from "@/components/admin/sidebar";
+import AdminLayout from "@/components/admin/admin-layout";
 import {
   Table,
   TableBody,
@@ -33,10 +33,52 @@ import {
   Trash2,
   ExternalLink,
   XCircle,
-  Menu,
+  Filter,
+  ChevronDown,
+  MoreHorizontal,
+  ArrowUpDown,
+  CalendarIcon,
+  GraduationCap,
+  MapPin,
+  Clock,
+  Award,
+  Globe,
+  Bookmark,
+  Check,
+  BookOpen,
+  Star
 } from "lucide-react";
 import { Scholarship, Country, Level, Category } from "@shared/schema";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const AdminScholarships = () => {
   const { isLoading: authLoading, isAuthenticated } = useAuth();
@@ -46,7 +88,19 @@ const AdminScholarships = () => {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const isMobile = useIsMobile();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"table" | "card">("table");
+  const [activeFilters, setActiveFilters] = useState<{
+    country?: number;
+    level?: number;
+    featured?: boolean;
+  }>({});
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc";
+  }>({
+    key: "title",
+    direction: "asc"
+  });
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -54,6 +108,22 @@ const AdminScholarships = () => {
       navigate("/admin/login");
     }
   }, [authLoading, isAuthenticated, navigate]);
+
+  // تذكر وضع العرض المفضل
+  useEffect(() => {
+    const savedViewMode = localStorage.getItem("scholarship-view-mode") as "table" | "card";
+    if (savedViewMode) {
+      setViewMode(savedViewMode);
+    } else if (isMobile) {
+      // استخدام بطاقات في وضع الجوال افتراضيًا
+      setViewMode("card");
+    }
+  }, [isMobile]);
+
+  const handleViewModeChange = (mode: "table" | "card") => {
+    setViewMode(mode);
+    localStorage.setItem("scholarship-view-mode", mode);
+  };
 
   // Fetch scholarships
   const {
@@ -132,110 +202,484 @@ const AdminScholarships = () => {
     return category?.name || "";
   };
 
-  const filteredScholarships = scholarships?.filter((scholarship) => {
-    if (!searchTerm) return true;
-    const search = searchTerm.toLowerCase();
-    
-    // التأكد من وجود النص قبل استخدام toLowerCase
-    const title = scholarship.title?.toLowerCase() || '';
-    const description = scholarship.description?.toLowerCase() || '';
-    const countryName = getCountryName(scholarship.countryId).toLowerCase();
-    const levelName = getLevelName(scholarship.levelId).toLowerCase();
-    
-    return (
-      title.includes(search) ||
-      description.includes(search) ||
-      countryName.includes(search) ||
-      levelName.includes(search)
-    );
-  });
+  // فلترة المنح بناءً على المعايير المحددة
+  const getFilteredScholarships = () => {
+    if (!scholarships) return [];
+
+    // أولاً، فلترة بناءً على مصطلح البحث
+    let filtered = scholarships.filter((scholarship) => {
+      if (!searchTerm) return true;
+      const search = searchTerm.toLowerCase();
+      
+      // التأكد من وجود النص قبل استخدام toLowerCase
+      const title = scholarship.title?.toLowerCase() || '';
+      const description = scholarship.description?.toLowerCase() || '';
+      const countryName = getCountryName(scholarship.countryId).toLowerCase();
+      const levelName = getLevelName(scholarship.levelId).toLowerCase();
+      
+      return (
+        title.includes(search) ||
+        description.includes(search) ||
+        countryName.includes(search) ||
+        levelName.includes(search)
+      );
+    });
+
+    // ثم فلترة بناءً على المرشحات النشطة
+    if (activeFilters.country) {
+      filtered = filtered.filter(
+        (scholarship) => scholarship.countryId === activeFilters.country
+      );
+    }
+
+    if (activeFilters.level) {
+      filtered = filtered.filter(
+        (scholarship) => scholarship.levelId === activeFilters.level
+      );
+    }
+
+    if (activeFilters.featured !== undefined) {
+      filtered = filtered.filter(
+        (scholarship) => scholarship.isFeatured === activeFilters.featured
+      );
+    }
+
+    // ترتيب النتائج
+    filtered.sort((a, b) => {
+      const direction = sortConfig.direction === "asc" ? 1 : -1;
+      if (sortConfig.key === "title") {
+        return (a.title || "").localeCompare(b.title || "") * direction;
+      }
+      if (sortConfig.key === "country") {
+        return getCountryName(a.countryId).localeCompare(getCountryName(b.countryId)) * direction;
+      }
+      if (sortConfig.key === "level") {
+        return getLevelName(a.levelId).localeCompare(getLevelName(b.levelId)) * direction;
+      }
+      if (sortConfig.key === "deadline") {
+        const dateA = a.deadline ? new Date(a.deadline).getTime() : 0;
+        const dateB = b.deadline ? new Date(b.deadline).getTime() : 0;
+        return (dateA - dateB) * direction;
+      }
+      return 0;
+    });
+
+    return filtered;
+  };
+
+  const toggleSort = (key: string) => {
+    if (sortConfig.key === key) {
+      setSortConfig({
+        key,
+        direction: sortConfig.direction === "asc" ? "desc" : "asc",
+      });
+    } else {
+      setSortConfig({
+        key,
+        direction: "asc",
+      });
+    }
+  };
+  
+  const filteredScholarships = getFilteredScholarships();
+  
+  const activeFilterCount = Object.keys(activeFilters).filter(
+    (key) => activeFilters[key as keyof typeof activeFilters] !== undefined
+  ).length;
+
+  const clearFilters = () => {
+    setActiveFilters({});
+  };
+
+  const getTableActions = (scholarship: Scholarship) => (
+    <div className="flex justify-start gap-2">
+      <Link
+        href={`/scholarships/${scholarship.slug}`}
+        target="_blank"
+      >
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0"
+          title="عرض المنحة"
+        >
+          <ExternalLink className="h-4 w-4" />
+        </Button>
+      </Link>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 w-8 p-0"
+        onClick={() => navigate(`/admin/scholarships/edit/${scholarship.id}`)}
+        title="تعديل المنحة"
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 w-8 p-0 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+        onClick={() => handleDeleteClick(scholarship.id)}
+        title="حذف المنحة"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
 
   if (authLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        جاري التحميل...
+        <div className="p-4 rounded-full bg-primary/10 mb-4">
+          <Award className="h-10 w-10 animate-pulse text-primary" />
+        </div>
+        <p className="text-muted-foreground animate-pulse font-medium">جاري التحميل...</p>
       </div>
     );
   }
 
-  return (
-    <div className="bg-background min-h-screen relative overflow-x-hidden">
-      {/* السايدبار للجوال */}
-      <Sidebar 
-        isMobileOpen={sidebarOpen} 
-        onClose={() => {
-          console.log('Scholarships: closing sidebar');
-          setSidebarOpen(false);
-        }} 
-      />
+  // العناصر التي ستظهر في شريط الإجراءات
+  const actionItems = (
+    <div className="flex gap-2">
+      {/* زر تغيير وضع العرض */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" className="h-9 gap-1">
+            <span className="hidden md:inline-block">عرض</span>
+            <ChevronDown className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem 
+            className={viewMode === "table" ? "bg-muted" : ""}
+            onClick={() => handleViewModeChange("table")}
+          >
+            <BookOpen className="ml-2 h-4 w-4" />
+            جدول
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            className={viewMode === "card" ? "bg-muted" : ""}
+            onClick={() => handleViewModeChange("card")}
+          >
+            <LayoutGrid className="ml-2 h-4 w-4" />
+            بطاقات
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       
-      {/* المحتوى الرئيسي */}
-      <div className={cn(
-        "transition-all duration-300",
-        isMobile ? "w-full" : "mr-64"
-      )}>
-        <main className="p-4 md:p-6">
-          {/* زر فتح السايدبار في الجوال والهيدر */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div className="flex items-center">
-              {isMobile && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="ml-2" 
-                  onClick={() => setSidebarOpen(true)}
-                  aria-label="فتح القائمة"
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
+      {/* زر المرشحات */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" className="h-9 gap-1" title="فلترة المنح">
+            <Filter className="h-4 w-4" />
+            <span className="hidden md:inline-block">فلترة</span>
+            {activeFilterCount > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 px-1.5">
+                {activeFilterCount}
+              </Badge>
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuLabel>فلترة المنح</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          
+          {/* فلترة حسب الدولة */}
+          <div className="px-2 py-1.5">
+            <span className="text-xs font-medium mb-1 block">الدولة</span>
+            <Select
+              value={activeFilters.country?.toString() || ""}
+              onValueChange={(value) => setActiveFilters({
+                ...activeFilters,
+                country: value ? parseInt(value) : undefined
+              })}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="جميع الدول" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">جميع الدول</SelectItem>
+                {countries?.map((country) => (
+                  <SelectItem key={country.id} value={country.id.toString()}>
+                    {country.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* فلترة حسب المستوى */}
+          <div className="px-2 py-1.5">
+            <span className="text-xs font-medium mb-1 block">المستوى الدراسي</span>
+            <Select
+              value={activeFilters.level?.toString() || ""}
+              onValueChange={(value) => setActiveFilters({
+                ...activeFilters,
+                level: value ? parseInt(value) : undefined
+              })}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="جميع المستويات" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">جميع المستويات</SelectItem>
+                {levels?.map((level) => (
+                  <SelectItem key={level.id} value={level.id.toString()}>
+                    {level.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* فلترة حسب الحالة المميزة */}
+          <div className="px-2 py-1.5">
+            <span className="text-xs font-medium mb-1 block">الحالة</span>
+            <Select
+              value={
+                activeFilters.featured === undefined 
+                  ? "" 
+                  : activeFilters.featured 
+                    ? "featured" 
+                    : "regular"
+              }
+              onValueChange={(value) => setActiveFilters({
+                ...activeFilters,
+                featured: value === "" 
+                  ? undefined 
+                  : value === "featured"
+              })}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="جميع المنح" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">جميع المنح</SelectItem>
+                <SelectItem value="featured">منح مميزة</SelectItem>
+                <SelectItem value="regular">منح عادية</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <DropdownMenuSeparator />
+          <div className="px-2 py-1.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-xs h-8"
+              onClick={clearFilters}
+              disabled={activeFilterCount === 0}
+            >
+              إعادة تعيين المرشحات
+            </Button>
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* زر الإضافة */}
+      <Button 
+        size="sm" 
+        className="h-9 gap-1 font-medium"
+        asChild
+      >
+        <Link href="/admin/scholarships/create">
+          <PlusCircle className="h-4 w-4 ml-1" />
+          <span className="hidden sm:inline-block">إضافة منحة</span>
+          <span className="inline-block sm:hidden">إضافة</span>
+        </Link>
+      </Button>
+    </div>
+  );
+
+  return (
+    <AdminLayout title="المنح الدراسية" actions={actionItems} breadcrumbs={
+      <div className="text-sm flex items-center">
+        <Link href="/admin" className="hover:text-foreground">
+          لوحة التحكم
+        </Link>
+        <span className="mx-2">/</span>
+        <span>المنح الدراسية</span>
+      </div>
+    }>
+      <div className="space-y-4">
+        {/* نظرة عامة عن المنح الدراسية والإحصائيات */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center">
+                <Award className="h-4 w-4 text-primary ml-2" />
+                إجمالي المنح
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-6 w-16" />
+              ) : (
+                <div className="text-2xl font-bold">{scholarships?.length || 0}</div>
               )}
-              <h1 className="text-xl md:text-2xl font-bold">إدارة المنح الدراسية</h1>
-            </div>
-            <Link href="/admin/scholarships/create">
-              <Button className="flex items-center w-full sm:w-auto shadow-soft">
-                <PlusCircle className="ml-2 h-4 w-4" /> إضافة منحة جديدة
-              </Button>
-            </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center">
+                <Star className="h-4 w-4 text-amber-500 ml-2" />
+                المنح المميزة
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-6 w-16" />
+              ) : (
+                <div className="text-2xl font-bold">
+                  {scholarships?.filter(s => s.isFeatured).length || 0}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center">
+                <Globe className="h-4 w-4 text-blue-500 ml-2" />
+                الدول
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-6 w-16" />
+              ) : (
+                <div className="text-2xl font-bold">
+                  {countries?.length || 0}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* قسم البحث */}
+        <div className="flex flex-col sm:flex-row justify-between gap-3 items-center">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="ابحث عن المنح..."
+              className="pr-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
 
-          <div className="bg-card p-4 md:p-6 rounded-lg shadow-soft mb-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="ابحث عن المنح..."
-                  className="pr-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {filteredScholarships?.length || 0} منحة دراسية
-              </div>
-            </div>
+          <div className="flex items-center text-sm text-muted-foreground">
+            {filteredScholarships.length} من أصل {scholarships?.length || 0} منحة
+            {activeFilterCount > 0 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="ml-2 h-8 text-xs"
+                onClick={clearFilters}
+              >
+                مسح المرشحات
+              </Button>
+            )}
+          </div>
+        </div>
 
-            {isLoading ? (
-              <div className="py-12 text-center">
-                <div className="inline-block animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-                <p className="mt-2 text-muted-foreground">جاري تحميل المنح الدراسية...</p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <XCircle className="h-12 w-12 text-destructive mx-auto mb-2" />
-                <h3 className="text-lg font-medium mb-1">
-                  خطأ في تحميل المنح الدراسية
-                </h3>
-                <p className="text-muted-foreground">يرجى المحاولة مرة أخرى لاحقًا.</p>
-              </div>
-            ) : filteredScholarships && filteredScholarships.length > 0 ? (
-              <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+        {/* عرض المنح */}
+        {isLoading ? (
+          <div className="space-y-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Card key={index} className="overflow-hidden">
+                <CardHeader className="pb-2">
+                  <Skeleton className="h-6 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Skeleton className="h-5 w-20" />
+                    <Skeleton className="h-5 w-24" />
+                  </div>
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6 mt-2" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="text-center py-12 border rounded-lg bg-card">
+            <XCircle className="h-12 w-12 text-destructive mx-auto mb-2" />
+            <h3 className="text-lg font-medium mb-1">
+              خطأ في تحميل المنح الدراسية
+            </h3>
+            <p className="text-muted-foreground">يرجى المحاولة مرة أخرى لاحقًا.</p>
+          </div>
+        ) : filteredScholarships.length > 0 ? (
+          viewMode === "table" ? (
+            <div className="bg-card border rounded-md overflow-hidden">
+              <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>العنوان</TableHead>
-                      <TableHead className="hidden md:table-cell">الدولة</TableHead>
-                      <TableHead className="hidden md:table-cell">المستوى</TableHead>
-                      <TableHead className="hidden lg:table-cell">الموعد النهائي</TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => toggleSort("title")}>
+                        <div className="flex items-center">
+                          العنوان
+                          {sortConfig.key === "title" && (
+                            <ChevronDown 
+                              className={cn(
+                                "h-4 w-4 ml-1", 
+                                sortConfig.direction === "desc" && "rotate-180"
+                              )} 
+                            />
+                          )}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="hidden md:table-cell cursor-pointer" 
+                        onClick={() => toggleSort("country")}
+                      >
+                        <div className="flex items-center">
+                          الدولة
+                          {sortConfig.key === "country" && (
+                            <ChevronDown 
+                              className={cn(
+                                "h-4 w-4 ml-1", 
+                                sortConfig.direction === "desc" && "rotate-180"
+                              )} 
+                            />
+                          )}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="hidden md:table-cell cursor-pointer" 
+                        onClick={() => toggleSort("level")}
+                      >
+                        <div className="flex items-center">
+                          المستوى
+                          {sortConfig.key === "level" && (
+                            <ChevronDown 
+                              className={cn(
+                                "h-4 w-4 ml-1", 
+                                sortConfig.direction === "desc" && "rotate-180"
+                              )} 
+                            />
+                          )}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="hidden lg:table-cell cursor-pointer" 
+                        onClick={() => toggleSort("deadline")}
+                      >
+                        <div className="flex items-center">
+                          الموعد النهائي
+                          {sortConfig.key === "deadline" && (
+                            <ChevronDown 
+                              className={cn(
+                                "h-4 w-4 ml-1", 
+                                sortConfig.direction === "desc" && "rotate-180"
+                              )} 
+                            />
+                          )}
+                        </div>
+                      </TableHead>
                       <TableHead>الحالة</TableHead>
                       <TableHead className="text-left">الإجراءات</TableHead>
                     </TableRow>
@@ -244,7 +688,9 @@ const AdminScholarships = () => {
                     {filteredScholarships.map((scholarship) => (
                       <TableRow key={scholarship.id}>
                         <TableCell className="font-medium">
-                          {scholarship.title}
+                          <div className="max-w-[220px] truncate">
+                            {scholarship.title}
+                          </div>
                           <div className="md:hidden text-xs text-muted-foreground mt-1">
                             {getCountryName(scholarship.countryId)} • {getLevelName(scholarship.levelId)}
                           </div>
@@ -260,57 +706,163 @@ const AdminScholarships = () => {
                         </TableCell>
                         <TableCell>
                           {scholarship.isFeatured ? (
-                            <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20">مميز</Badge>
+                            <Badge className="bg-amber-500/10 border-amber-200 text-amber-700 hover:bg-amber-500/20">
+                              <Star className="h-3 w-3 ml-1 fill-amber-500 text-amber-500" />
+                              مميز
+                            </Badge>
                           ) : (
                             <Badge variant="secondary">عادي</Badge>
                           )}
                         </TableCell>
                         <TableCell>
-                          <div className="flex justify-start gap-2">
-                            <Link
-                              href={`/scholarships/${scholarship.slug}`}
-                              target="_blank"
-                            >
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                              >
-                                <ExternalLink className="h-4 w-4" />
-                              </Button>
-                            </Link>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() => navigate(`/admin/scholarships/edit/${scholarship.id}`)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
-                              onClick={() => handleDeleteClick(scholarship.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          {getTableActions(scholarship)}
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">
-                  لم يتم العثور على منح دراسية. قم بإنشاء أول منحة باستخدام زر "إضافة منحة جديدة".
+            </div>
+          ) : (
+            // عرض البطاقات
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredScholarships.map((scholarship) => (
+                <Card key={scholarship.id} className="overflow-hidden">
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-base line-clamp-1">
+                        {scholarship.title}
+                      </CardTitle>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem 
+                            onClick={() => navigate(`/admin/scholarships/edit/${scholarship.id}`)}
+                          >
+                            <Edit className="ml-2 h-4 w-4" />
+                            تعديل
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => window.open(`/scholarships/${scholarship.slug}`, '_blank')}
+                          >
+                            <ExternalLink className="ml-2 h-4 w-4" />
+                            عرض
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => handleDeleteClick(scholarship.id)}
+                          >
+                            <Trash2 className="ml-2 h-4 w-4" />
+                            حذف
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    <CardDescription className="line-clamp-1">
+                      {scholarship.description || "بدون وصف"}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {scholarship.isFeatured && (
+                        <Badge className="bg-amber-500/10 border-amber-200 text-amber-700">
+                          <Star className="h-3 w-3 ml-1 fill-amber-500 text-amber-500" />
+                          مميز
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className="gap-1 text-muted-foreground">
+                        <MapPin className="h-3 w-3" />
+                        {getCountryName(scholarship.countryId)}
+                      </Badge>
+                      <Badge variant="outline" className="gap-1 text-muted-foreground">
+                        <GraduationCap className="h-3 w-3" />
+                        {getLevelName(scholarship.levelId)}
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {scholarship.deadline ? 
+                        <span>آخر موعد: {scholarship.deadline}</span> : 
+                        <span>مستمر التقديم</span>
+                      }
+                    </div>
+                  </CardContent>
+                  <CardFooter className="pt-0 flex justify-between">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="text-xs text-muted-foreground"
+                      onClick={() => navigate(`/admin/scholarships/edit/${scholarship.id}`)}
+                    >
+                      <Edit className="ml-1 h-3 w-3" />
+                      تعديل
+                    </Button>
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-xs text-muted-foreground"
+                        onClick={() => handleDeleteClick(scholarship.id)}
+                      >
+                        <Trash2 className="ml-1 h-3 w-3" />
+                        حذف
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-xs text-muted-foreground"
+                        asChild
+                      >
+                        <Link href={`/scholarships/${scholarship.slug}`} target="_blank">
+                          <ExternalLink className="ml-1 h-3 w-3" />
+                          عرض
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )
+        ) : (
+          <div className="text-center py-12 border rounded-lg bg-card">
+            {searchTerm || activeFilterCount > 0 ? (
+              <>
+                <Search className="h-12 w-12 text-muted-foreground mx-auto mb-2 opacity-50" />
+                <h3 className="text-lg font-medium mb-1">
+                  لم يتم العثور على منح مطابقة
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  حاول تغيير معايير البحث أو المرشحات للعثور على نتائج
                 </p>
-              </div>
+                <Button variant="outline" onClick={clearFilters}>
+                  إعادة تعيين المرشحات
+                </Button>
+              </>
+            ) : (
+              <>
+                <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-2 opacity-50" />
+                <h3 className="text-lg font-medium mb-1">
+                  لا توجد منح دراسية حتى الآن
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  قم بإنشاء أول منحة باستخدام زر "إضافة منحة جديدة".
+                </p>
+                <Button asChild>
+                  <Link href="/admin/scholarships/create">
+                    <PlusCircle className="ml-2 h-4 w-4" />
+                    إضافة منحة جديدة
+                  </Link>
+                </Button>
+              </>
             )}
           </div>
-        </main>
+        )}
       </div>
 
       {/* نافذة تأكيد الحذف */}
@@ -339,7 +891,7 @@ const AdminScholarships = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </AdminLayout>
   );
 };
 
