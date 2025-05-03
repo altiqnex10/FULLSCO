@@ -6,8 +6,9 @@ import { z } from 'zod';
 import { useLocation, useParams } from 'wouter';
 import AdminLayout from '@/components/admin/admin-layout';
 import RichEditor from '@/components/ui/rich-editor';
+import MediaSelector from '@/components/ui/media-selector';
 import { useToast } from '@/hooks/use-toast';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useMobile } from '@/hooks/use-mobile';
 
 import {
   Form,
@@ -100,6 +101,7 @@ const scholarshipFormSchema = z.object({
   seoDescription: z.string().max(170, 'وصف SEO لا يجب أن يتجاوز 170 حرف').optional().nullable(),
   seoKeywords: z.string().optional().nullable(),
   focusKeyword: z.string().optional().nullable(),
+  featuredImage: z.string().optional().nullable(),
 });
 
 type ScholarshipFormValues = z.infer<typeof scholarshipFormSchema>;
