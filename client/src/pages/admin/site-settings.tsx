@@ -301,10 +301,9 @@ export default function SiteSettingsPage() {
   // تحديث إعدادات الموقع - mutation
   const updateMutation = useMutation({
     mutationFn: async (updatedSettings: SiteSettingsFormValues) => {
-      // نحتفظ بالقيم الحالية لـ rtlDirection وenableDarkMode وdefaultLanguage
+      // نستخدم القيم المحدثة من النموذج بما في ذلك rtlDirection
       const finalSettings = {
         ...updatedSettings,
-        rtlDirection: siteSettings?.rtlDirection ?? true,
         enableDarkMode: siteSettings?.enableDarkMode ?? true,
         defaultLanguage: siteSettings?.defaultLanguage ?? 'ar',
       };
@@ -341,9 +340,16 @@ export default function SiteSettingsPage() {
   // تقديم النموذج
   const onSubmit = (data: SiteSettingsFormValues) => {
     console.log('Form submitted with values:', data);
+    console.log('RTL direction setting:', data.rtlDirection);
     
     // إرسال البيانات من خلال mutation
     updateMutation.mutate(data);
+    
+    // تطبيق إعدادات RTL مباشرة
+    if (document.dir !== (data.rtlDirection ? 'rtl' : 'ltr')) {
+      console.log('Updating document direction to:', data.rtlDirection ? 'rtl' : 'ltr');
+      document.dir = data.rtlDirection ? 'rtl' : 'ltr';
+    }
   };
   
   // عرض شاشة التحميل
