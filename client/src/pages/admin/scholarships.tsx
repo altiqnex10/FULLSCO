@@ -616,74 +616,107 @@ const AdminScholarships = () => {
         ) : filteredScholarships.length > 0 ? (
           isMobile ? (
             // عرض البطاقات على الجوال دائماً
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="w-full">
               {filteredScholarships.map((scholarship) => (
-                <Card key={scholarship.id} className="overflow-hidden border rounded-md">
-                  <CardHeader className="pb-1 px-2 py-2">
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="text-xs line-clamp-1">
+                <Card key={scholarship.id} className="mb-3 overflow-hidden border rounded-md">
+                  <div className="flex items-start p-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-sm mb-1 pr-8 truncate">
                         {scholarship.title}
-                      </CardTitle>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 -mt-1 -mr-1">
-                            <MoreHorizontal className="h-3.5 w-3.5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem 
-                            onClick={() => navigate(`/admin/scholarships/edit/${scholarship.id}`)}
-                            className="text-xs py-1.5"
-                          >
-                            <Edit className="ml-1.5 h-3.5 w-3.5" />
-                            تعديل
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => window.open(`/scholarships/${scholarship.slug}`, '_blank')}
-                            className="text-xs py-1.5"
-                          >
-                            <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
-                            عرض
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            className="text-destructive focus:text-destructive text-xs py-1.5"
-                            onClick={() => handleDeleteClick(scholarship.id)}
-                          >
-                            <Trash2 className="ml-1.5 h-3.5 w-3.5" />
-                            حذف
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="px-2 py-1 mb-0.5">
-                    <div className="flex flex-wrap gap-1 mb-1.5">
-                      {scholarship.isFeatured && (
-                        <Badge className="bg-amber-500/10 border-amber-200 text-amber-700 text-[9px] h-4 rounded-sm">
-                          <Star className="h-2.5 w-2.5 ml-1 fill-amber-500 text-amber-500" />
-                          مميز
+                      </h3>
+                      
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {scholarship.isFeatured && (
+                          <Badge className="bg-amber-500/10 border-amber-200 text-amber-700">
+                            <Star className="h-3 w-3 ml-1.5 fill-amber-500 text-amber-500" />
+                            مميز
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className="gap-1 text-muted-foreground">
+                          <MapPin className="h-3 w-3" />
+                          {getCountryName(scholarship.countryId)}
                         </Badge>
-                      )}
-                      <Badge variant="outline" className="gap-1 text-muted-foreground text-[9px] h-4 rounded-sm">
-                        <MapPin className="h-2.5 w-2.5" />
-                        {getCountryName(scholarship.countryId)}
-                      </Badge>
-                      <Badge variant="outline" className="gap-1 text-muted-foreground text-[9px] h-4 rounded-sm">
-                        <GraduationCap className="h-2.5 w-2.5" />
-                        {getLevelName(scholarship.levelId)}
-                      </Badge>
+                        <Badge variant="outline" className="gap-1 text-muted-foreground">
+                          <GraduationCap className="h-3 w-3" />
+                          {getLevelName(scholarship.levelId)}
+                        </Badge>
+                      </div>
+                      
+                      <div className="text-sm text-muted-foreground flex items-center gap-1 mt-2">
+                        <Clock className="h-3 w-3 flex-shrink-0" />
+                        <span className="truncate">
+                          {scholarship.deadline ? 
+                            `آخر موعد: ${scholarship.deadline}` : 
+                            "مستمر التقديم"
+                          }
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-[9px] text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-2.5 w-2.5 flex-shrink-0" />
-                      <span className="truncate">
-                        {scholarship.deadline ? 
-                          `آخر موعد: ${scholarship.deadline}` : 
-                          "مستمر التقديم"
-                        }
-                      </span>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 ml-1 absolute top-2 left-2">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          onClick={() => navigate(`/admin/scholarships/edit/${scholarship.id}`)}
+                        >
+                          <Edit className="ml-2 h-4 w-4" />
+                          تعديل
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => window.open(`/scholarships/${scholarship.slug}`, '_blank')}
+                        >
+                          <ExternalLink className="ml-2 h-4 w-4" />
+                          عرض
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => handleDeleteClick(scholarship.id)}
+                        >
+                          <Trash2 className="ml-2 h-4 w-4" />
+                          حذف
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  
+                  <div className="flex justify-between border-t p-2 bg-muted/30">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="text-xs text-muted-foreground"
+                      onClick={() => navigate(`/admin/scholarships/edit/${scholarship.id}`)}
+                    >
+                      <Edit className="ml-1.5 h-3.5 w-3.5" />
+                      تعديل
+                    </Button>
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-xs text-destructive"
+                        onClick={() => handleDeleteClick(scholarship.id)}
+                      >
+                        <Trash2 className="ml-1.5 h-3.5 w-3.5" />
+                        حذف
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-xs text-muted-foreground"
+                        asChild
+                      >
+                        <Link href={`/scholarships/${scholarship.slug}`} target="_blank">
+                          <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                          عرض
+                        </Link>
+                      </Button>
                     </div>
-                  </CardContent>
+                  </div>
                 </Card>
               ))}
             </div>
