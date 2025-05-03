@@ -40,8 +40,9 @@ const siteSettingsSchema = z.object({
   primaryColor: z.string().optional(),
   secondaryColor: z.string().optional(),
   accentColor: z.string().optional(),
-  // تم الاحتفاظ بخيار RTL وحذف الوضع المظلم واللغة الافتراضية
+  enableDarkMode: z.boolean().default(true),
   rtlDirection: z.boolean().default(true),
+  defaultLanguage: z.string().default('ar'),
   enableNewsletter: z.boolean().default(true),
   enableScholarshipSearch: z.boolean().default(true),
   footerText: z.string().optional(),
@@ -108,9 +109,9 @@ interface SiteSetting {
   primaryColor?: string;
   secondaryColor?: string;
   accentColor?: string;
-  enableDarkMode: boolean;  // لا نزال نحتفظ بها في الواجهة للتعامل مع البيانات القادمة من API
-  rtlDirection: boolean;    // لا نزال نحتفظ بها في الواجهة للتعامل مع البيانات القادمة من API
-  defaultLanguage: string;  // لا نزال نحتفظ بها في الواجهة للتعامل مع البيانات القادمة من API
+  enableDarkMode: boolean;
+  rtlDirection: boolean;
+  defaultLanguage: string;
   enableNewsletter: boolean;
   enableScholarshipSearch: boolean;
   footerText?: string;
@@ -153,6 +154,13 @@ interface SiteSetting {
   articlePageLayout?: string;
   customCss?: string;
 }
+
+// قائمة اللغات المتاحة
+const availableLanguages = [
+  { code: 'ar', name: 'العربية' },
+  { code: 'en', name: 'English' },
+  { code: 'fr', name: 'Français' },
+];
 
 // قائمة تخطيطات الصفحة الرئيسية
 const homePageLayouts = [
@@ -206,7 +214,9 @@ export default function SiteSettingsPage() {
     resolver: zodResolver(siteSettingsSchema),
     defaultValues: {
       siteName: '',
+      enableDarkMode: true,
       rtlDirection: true,
+      defaultLanguage: 'ar',
       enableNewsletter: true,
       enableScholarshipSearch: true,
       showHeroSection: true,
@@ -248,8 +258,9 @@ export default function SiteSettingsPage() {
         primaryColor: siteSettings.primaryColor || '#3b82f6',
         secondaryColor: siteSettings.secondaryColor || '#f59e0b',
         accentColor: siteSettings.accentColor || '#a855f7',
-        // تم الاحتفاظ بخيار RTL وحذف الوضع المظلم واللغة الافتراضية
+        enableDarkMode: siteSettings.enableDarkMode,
         rtlDirection: siteSettings.rtlDirection,
+        defaultLanguage: siteSettings.defaultLanguage,
         enableNewsletter: siteSettings.enableNewsletter,
         enableScholarshipSearch: siteSettings.enableScholarshipSearch,
         footerText: siteSettings.footerText || '',
@@ -301,18 +312,10 @@ export default function SiteSettingsPage() {
   // تحديث إعدادات الموقع - mutation
   const updateMutation = useMutation({
     mutationFn: async (updatedSettings: SiteSettingsFormValues) => {
-      // نحتفظ بالقيم الحالية لـ rtlDirection وenableDarkMode وdefaultLanguage
-      const finalSettings = {
-        ...updatedSettings,
-        rtlDirection: siteSettings?.rtlDirection ?? true,
-        enableDarkMode: siteSettings?.enableDarkMode ?? true,
-        defaultLanguage: siteSettings?.defaultLanguage ?? 'ar',
-      };
-      
       const response = await fetch('/api/site-settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(finalSettings),
+        body: JSON.stringify(updatedSettings),
       });
       
       if (!response.ok) {
@@ -410,11 +413,15 @@ export default function SiteSettingsPage() {
                         </TabsTrigger>
                         <TabsTrigger value="sections">
                           <ToggleLeft className="ml-2 h-4 w-4" />
-                          الأقسام والمحتوى
+                          إظهار/إخفاء الأقسام
                         </TabsTrigger>
-                        <TabsTrigger value="advanced">
+                        <TabsTrigger value="content">
                           <Type className="ml-2 h-4 w-4" />
-                          إعدادات متقدمة
+                          محتوى الأقسام
+                        </TabsTrigger>
+                        <TabsTrigger value="notifications">
+                          <Bell className="ml-2 h-4 w-4" />
+                          الإشعارات
                         </TabsTrigger>
                       </TabsList>
                     </ScrollArea>
@@ -429,27 +436,26 @@ export default function SiteSettingsPage() {
                             <FormItem>
                               <FormLabel>اسم الموقع</FormLabel>
                               <FormControl>
-                                <Input {...field} placeholder="أدخل اسم الموقع" />
+                                <Input {...field} placeholder="اسم الموقع الإلكتروني" />
                               </FormControl>
                               <FormDescription>
-                                الاسم الرئيسي للموقع الذي سيظهر للزوار
+                                سيظهر هذا الاسم في عنوان الصفحة وفي مختلف أنحاء الموقع
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
                         <FormField
                           control={form.control}
                           name="siteTagline"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>شعار الموقع النصي</FormLabel>
+                              <FormLabel>شعار الموقع</FormLabel>
                               <FormControl>
-                                <Input {...field} placeholder="شعار قصير للموقع" />
+                                <Input {...field} placeholder="الشعار أو الوصف المختصر للموقع" />
                               </FormControl>
                               <FormDescription>
-                                جملة قصيرة تصف الموقع وتظهر في الهيدر
+                                سيظهر هذا الوصف المختصر تحت اسم الموقع
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
@@ -464,39 +470,22 @@ export default function SiteSettingsPage() {
                           <FormItem>
                             <FormLabel>وصف الموقع</FormLabel>
                             <FormControl>
-                              <Textarea {...field} placeholder="وصف مختصر للموقع" className="min-h-24" />
+                              <Textarea
+                                {...field}
+                                placeholder="وصف كامل للموقع"
+                                rows={3}
+                              />
                             </FormControl>
                             <FormDescription>
-                              وصف للموقع يستخدم في نتائج البحث ووسائل التواصل الاجتماعي
+                              سيستخدم هذا الوصف في محركات البحث وفي الميتا تاغ للصفحات
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                       
-                      <div className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="rtlDirection"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                              <div className="space-y-0.5">
-                                <FormLabel className="text-base">اتجاه RTL</FormLabel>
-                                <FormDescription>
-                                  استخدام اتجاه من اليمين إلى اليسار للموقع
-                                </FormDescription>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
+                      {/* تم إزالة خيارات RTL والوضع المظلم واللغة الافتراضية بناءً على طلب المستخدم */}
+                      
                       <FormField
                         control={form.control}
                         name="footerText"
@@ -584,7 +573,7 @@ export default function SiteSettingsPage() {
                                   type="color"
                                   value={field.value || '#3b82f6'}
                                   onChange={(e) => field.onChange(e.target.value)}
-                                  className="w-12 p-1 mr-2"
+                                  className="w-12 p-1 ml-2"
                                 />
                               </div>
                               <FormDescription>
@@ -608,7 +597,7 @@ export default function SiteSettingsPage() {
                                   type="color"
                                   value={field.value || '#f59e0b'}
                                   onChange={(e) => field.onChange(e.target.value)}
-                                  className="w-12 p-1 mr-2"
+                                  className="w-12 p-1 ml-2"
                                 />
                               </div>
                               <FormDescription>
@@ -632,7 +621,7 @@ export default function SiteSettingsPage() {
                                   type="color"
                                   value={field.value || '#a855f7'}
                                   onChange={(e) => field.onChange(e.target.value)}
-                                  className="w-12 p-1 mr-2"
+                                  className="w-12 p-1 ml-2"
                                 />
                               </div>
                               <FormDescription>
@@ -751,6 +740,28 @@ export default function SiteSettingsPage() {
                           )}
                         />
                       </div>
+                      
+                      <FormField
+                        control={form.control}
+                        name="customCss"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>CSS مخصص</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                placeholder="/* أضف أكواد CSS المخصصة هنا */"
+                                rows={6}
+                                className="font-mono text-sm"
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              أكواد CSS مخصصة ستضاف إلى الموقع (استخدم بحذر)
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </TabsContent>
                     
                     {/* معلومات الاتصال */}
@@ -763,16 +774,15 @@ export default function SiteSettingsPage() {
                             <FormItem>
                               <FormLabel>البريد الإلكتروني</FormLabel>
                               <FormControl>
-                                <Input {...field} placeholder="info@example.com" />
+                                <Input {...field} type="email" placeholder="info@example.com" />
                               </FormControl>
                               <FormDescription>
-                                البريد الإلكتروني الرسمي للموقع
+                                عنوان البريد الإلكتروني الرئيسي للاتصال
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
                         <FormField
                           control={form.control}
                           name="phone"
@@ -780,50 +790,54 @@ export default function SiteSettingsPage() {
                             <FormItem>
                               <FormLabel>رقم الهاتف</FormLabel>
                               <FormControl>
-                                <Input {...field} placeholder="+123456789" />
+                                <Input {...field} placeholder="+1234567890" />
                               </FormControl>
                               <FormDescription>
-                                رقم الهاتف للتواصل
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="whatsapp"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>واتساب</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="+123456789" />
-                              </FormControl>
-                              <FormDescription>
-                                رقم واتساب للتواصل (مع رمز البلد)
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="address"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>العنوان</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="العنوان الفعلي" />
-                              </FormControl>
-                              <FormDescription>
-                                العنوان الفعلي للمكتب أو المقر
+                                رقم الهاتف للاتصال
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
                       </div>
+                      
+                      <FormField
+                        control={form.control}
+                        name="whatsapp"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>رقم واتساب</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="+1234567890" />
+                            </FormControl>
+                            <FormDescription>
+                              رقم واتساب للدعم والاستفسارات
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="address"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>العنوان</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                placeholder="عنوان المكتب أو المقر"
+                                rows={3}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              عنوان المكتب أو المقر الرئيسي
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </TabsContent>
                     
                     {/* التواصل الاجتماعي */}
@@ -836,7 +850,7 @@ export default function SiteSettingsPage() {
                             <FormItem>
                               <FormLabel>فيسبوك</FormLabel>
                               <FormControl>
-                                <Input {...field} placeholder="https://facebook.com/username" />
+                                <Input {...field} placeholder="https://facebook.com/yourpage" />
                               </FormControl>
                               <FormDescription>
                                 رابط صفحة الفيسبوك
@@ -845,24 +859,25 @@ export default function SiteSettingsPage() {
                             </FormItem>
                           )}
                         />
-                        
                         <FormField
                           control={form.control}
                           name="twitter"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>تويتر / اكس</FormLabel>
+                              <FormLabel>تويتر</FormLabel>
                               <FormControl>
-                                <Input {...field} placeholder="https://twitter.com/username" />
+                                <Input {...field} placeholder="https://twitter.com/yourhandle" />
                               </FormControl>
                               <FormDescription>
-                                رابط حساب تويتر / اكس
+                                رابط حساب تويتر
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
+                      </div>
+                      
+                      <div className="grid gap-6 md:grid-cols-2">
                         <FormField
                           control={form.control}
                           name="instagram"
@@ -870,16 +885,15 @@ export default function SiteSettingsPage() {
                             <FormItem>
                               <FormLabel>انستغرام</FormLabel>
                               <FormControl>
-                                <Input {...field} placeholder="https://instagram.com/username" />
+                                <Input {...field} placeholder="https://instagram.com/yourprofile" />
                               </FormControl>
                               <FormDescription>
-                                رابط حساب الانستغرام
+                                رابط حساب انستغرام
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
                         <FormField
                           control={form.control}
                           name="youtube"
@@ -887,7 +901,7 @@ export default function SiteSettingsPage() {
                             <FormItem>
                               <FormLabel>يوتيوب</FormLabel>
                               <FormControl>
-                                <Input {...field} placeholder="https://youtube.com/channel/id" />
+                                <Input {...field} placeholder="https://youtube.com/yourchannel" />
                               </FormControl>
                               <FormDescription>
                                 رابط قناة اليوتيوب
@@ -896,24 +910,24 @@ export default function SiteSettingsPage() {
                             </FormItem>
                           )}
                         />
-                        
-                        <FormField
-                          control={form.control}
-                          name="linkedin"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>لينكد إن</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="https://linkedin.com/company/name" />
-                              </FormControl>
-                              <FormDescription>
-                                رابط صفحة لينكد إن
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
                       </div>
+                      
+                      <FormField
+                        control={form.control}
+                        name="linkedin"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>لينكد إن</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="https://linkedin.com/company/yourcompany" />
+                            </FormControl>
+                            <FormDescription>
+                              رابط صفحة لينكد إن
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </TabsContent>
                     
                     {/* الصفحة الرئيسية */}
@@ -924,44 +938,48 @@ export default function SiteSettingsPage() {
                           name="heroTitle"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>عنوان قسم الهيرو</FormLabel>
+                              <FormLabel>عنوان قسم البانر الرئيسي</FormLabel>
                               <FormControl>
-                                <Input {...field} placeholder="العنوان الرئيسي للصفحة الرئيسية" />
+                                <Input {...field} placeholder="ابحث عن المنح الدراسية المناسبة لك" />
                               </FormControl>
                               <FormDescription>
-                                العنوان الرئيسي للصفحة الرئيسية
+                                العنوان الرئيسي في قسم البانر
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
                         <FormField
                           control={form.control}
                           name="heroDescription"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>وصف قسم الهيرو</FormLabel>
+                              <FormLabel>وصف قسم البانر الرئيسي</FormLabel>
                               <FormControl>
-                                <Textarea {...field} placeholder="نص وصفي قصير" className="min-h-20" />
+                                <Input {...field} placeholder="أكبر قاعدة بيانات للمنح الدراسية حول العالم" />
                               </FormControl>
                               <FormDescription>
-                                نص وصفي قصير يظهر تحت العنوان في الصفحة الرئيسية
+                                الوصف المختصر تحت العنوان في قسم البانر
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
+                      </div>
+                    </TabsContent>
+                    
+                    {/* إظهار/إخفاء الأقسام */}
+                    <TabsContent value="sections" className="space-y-6">
+                      <div className="grid gap-4 md:grid-cols-2">
                         <FormField
                           control={form.control}
                           name="showHeroSection"
                           render={({ field }) => (
                             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                               <div className="space-y-0.5">
-                                <FormLabel className="text-base">قسم الهيرو</FormLabel>
+                                <FormLabel className="text-base">قسم البانر الرئيسي</FormLabel>
                                 <FormDescription>
-                                  عرض أو إخفاء قسم الهيرو في الصفحة الرئيسية
+                                  قسم البانر الكبير في أعلى الصفحة الرئيسية
                                 </FormDescription>
                               </div>
                               <FormControl>
@@ -982,7 +1000,7 @@ export default function SiteSettingsPage() {
                               <div className="space-y-0.5">
                                 <FormLabel className="text-base">قسم البحث</FormLabel>
                                 <FormDescription>
-                                  عرض أو إخفاء قسم البحث في الصفحة الرئيسية
+                                  قسم البحث عن المنح الدراسية
                                 </FormDescription>
                               </div>
                               <FormControl>
@@ -994,21 +1012,16 @@ export default function SiteSettingsPage() {
                             </FormItem>
                           )}
                         />
-                      </div>
-                    </TabsContent>
-                    
-                    {/* الأقسام والمحتوى */}
-                    <TabsContent value="sections" className="space-y-6">
-                      <div className="grid gap-6 md:grid-cols-2">
+                        
                         <FormField
                           control={form.control}
                           name="showFeaturedScholarships"
                           render={({ field }) => (
                             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                               <div className="space-y-0.5">
-                                <FormLabel className="text-base">المنح الدراسية المميزة</FormLabel>
+                                <FormLabel className="text-base">قسم المنح المميزة</FormLabel>
                                 <FormDescription>
-                                  عرض قسم المنح الدراسية المميزة في الصفحة الرئيسية
+                                  قسم يعرض المنح الدراسية المميزة
                                 </FormDescription>
                               </div>
                               <FormControl>
@@ -1029,7 +1042,7 @@ export default function SiteSettingsPage() {
                               <div className="space-y-0.5">
                                 <FormLabel className="text-base">قسم التصنيفات</FormLabel>
                                 <FormDescription>
-                                  عرض قسم تصنيفات المنح الدراسية
+                                  قسم يعرض تصنيفات المنح الدراسية
                                 </FormDescription>
                               </div>
                               <FormControl>
@@ -1048,9 +1061,9 @@ export default function SiteSettingsPage() {
                           render={({ field }) => (
                             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                               <div className="space-y-0.5">
-                                <FormLabel className="text-base">قسم البلدان</FormLabel>
+                                <FormLabel className="text-base">قسم الدول</FormLabel>
                                 <FormDescription>
-                                  عرض قسم بلدان المنح الدراسية
+                                  قسم يعرض الدول المتاحة للمنح الدراسية
                                 </FormDescription>
                               </div>
                               <FormControl>
@@ -1069,9 +1082,9 @@ export default function SiteSettingsPage() {
                           render={({ field }) => (
                             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                               <div className="space-y-0.5">
-                                <FormLabel className="text-base">أحدث المقالات</FormLabel>
+                                <FormLabel className="text-base">قسم أحدث المقالات</FormLabel>
                                 <FormDescription>
-                                  عرض قسم أحدث المقالات في الصفحة الرئيسية
+                                  قسم يعرض أحدث المقالات المنشورة
                                 </FormDescription>
                               </div>
                               <FormControl>
@@ -1090,9 +1103,9 @@ export default function SiteSettingsPage() {
                           render={({ field }) => (
                             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                               <div className="space-y-0.5">
-                                <FormLabel className="text-base">قصص النجاح</FormLabel>
+                                <FormLabel className="text-base">قسم قصص النجاح</FormLabel>
                                 <FormDescription>
-                                  عرض قسم قصص النجاح في الصفحة الرئيسية
+                                  قسم يعرض قصص نجاح الطلاب
                                 </FormDescription>
                               </div>
                               <FormControl>
@@ -1113,7 +1126,7 @@ export default function SiteSettingsPage() {
                               <div className="space-y-0.5">
                                 <FormLabel className="text-base">قسم النشرة البريدية</FormLabel>
                                 <FormDescription>
-                                  عرض قسم الاشتراك في النشرة البريدية
+                                  قسم الاشتراك في النشرة البريدية
                                 </FormDescription>
                               </div>
                               <FormControl>
@@ -1134,7 +1147,7 @@ export default function SiteSettingsPage() {
                               <div className="space-y-0.5">
                                 <FormLabel className="text-base">قسم الإحصائيات</FormLabel>
                                 <FormDescription>
-                                  عرض قسم الإحصائيات في الصفحة الرئيسية
+                                  قسم يعرض إحصائيات عن المنح والطلاب
                                 </FormDescription>
                               </div>
                               <FormControl>
@@ -1155,7 +1168,7 @@ export default function SiteSettingsPage() {
                               <div className="space-y-0.5">
                                 <FormLabel className="text-base">قسم الشركاء</FormLabel>
                                 <FormDescription>
-                                  عرض قسم الشركاء والرعاة في الصفحة الرئيسية
+                                  قسم يعرض شعارات الشركاء والرعاة
                                 </FormDescription>
                               </div>
                               <FormControl>
@@ -1168,9 +1181,12 @@ export default function SiteSettingsPage() {
                           )}
                         />
                       </div>
-                                            
-                      <Separator />
-                      
+                    </TabsContent>
+                    
+                    {/* محتوى الأقسام */}
+                    <TabsContent value="content" className="space-y-6">
+                      <Separator className="my-4" />
+                      <h3 className="text-lg font-medium">محتوى المنح المميزة</h3>
                       <div className="grid gap-6 md:grid-cols-2">
                         <FormField
                           control={form.control}
@@ -1179,16 +1195,12 @@ export default function SiteSettingsPage() {
                             <FormItem>
                               <FormLabel>عنوان قسم المنح المميزة</FormLabel>
                               <FormControl>
-                                <Input {...field} placeholder="المنح الدراسية المميزة" />
+                                <Input {...field} placeholder="منح دراسية مميزة" />
                               </FormControl>
-                              <FormDescription>
-                                عنوان قسم المنح المميزة في الصفحة الرئيسية
-                              </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
                         <FormField
                           control={form.control}
                           name="featuredScholarshipsDescription"
@@ -1198,14 +1210,15 @@ export default function SiteSettingsPage() {
                               <FormControl>
                                 <Input {...field} placeholder="أبرز المنح الدراسية المتاحة حالياً" />
                               </FormControl>
-                              <FormDescription>
-                                وصف قصير لقسم المنح المميزة
-                              </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
+                      </div>
+                      
+                      <Separator className="my-4" />
+                      <h3 className="text-lg font-medium">محتوى قسم التصنيفات</h3>
+                      <div className="grid gap-6 md:grid-cols-2">
                         <FormField
                           control={form.control}
                           name="categoriesSectionTitle"
@@ -1215,14 +1228,10 @@ export default function SiteSettingsPage() {
                               <FormControl>
                                 <Input {...field} placeholder="تصفح حسب التخصص" />
                               </FormControl>
-                              <FormDescription>
-                                عنوان قسم التصنيفات في الصفحة الرئيسية
-                              </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
                         <FormField
                           control={form.control}
                           name="categoriesSectionDescription"
@@ -1232,9 +1241,192 @@ export default function SiteSettingsPage() {
                               <FormControl>
                                 <Input {...field} placeholder="اختر المنح المناسبة حسب مجال دراستك" />
                               </FormControl>
-                              <FormDescription>
-                                وصف قصير لقسم التصنيفات
-                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <Separator className="my-4" />
+                      <h3 className="text-lg font-medium">محتوى قسم الدول</h3>
+                      <div className="grid gap-6 md:grid-cols-2">
+                        <FormField
+                          control={form.control}
+                          name="countriesSectionTitle"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>عنوان قسم الدول</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="تصفح حسب الدولة" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="countriesSectionDescription"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>وصف قسم الدول</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="استكشف فرص الدراسة في بلدان مختلفة" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <Separator className="my-4" />
+                      <h3 className="text-lg font-medium">محتوى قسم المقالات</h3>
+                      <div className="grid gap-6 md:grid-cols-2">
+                        <FormField
+                          control={form.control}
+                          name="latestArticlesTitle"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>عنوان قسم المقالات</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="أحدث المقالات" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="latestArticlesDescription"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>وصف قسم المقالات</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="تعرف على آخر النصائح والمعلومات" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <Separator className="my-4" />
+                      <h3 className="text-lg font-medium">محتوى قسم قصص النجاح</h3>
+                      <div className="grid gap-6 md:grid-cols-2">
+                        <FormField
+                          control={form.control}
+                          name="successStoriesTitle"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>عنوان قسم قصص النجاح</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="قصص نجاح" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="successStoriesDescription"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>وصف قسم قصص النجاح</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="تجارب حقيقية للطلاب الذين حصلوا على منح دراسية" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <Separator className="my-4" />
+                      <h3 className="text-lg font-medium">محتوى قسم النشرة البريدية</h3>
+                      <div className="grid gap-6 md:grid-cols-2">
+                        <FormField
+                          control={form.control}
+                          name="newsletterSectionTitle"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>عنوان قسم النشرة البريدية</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="النشرة البريدية" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="newsletterSectionDescription"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>وصف قسم النشرة البريدية</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="اشترك ليصلك كل جديد عن المنح الدراسية" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <Separator className="my-4" />
+                      <h3 className="text-lg font-medium">محتوى قسم الإحصائيات</h3>
+                      <div className="grid gap-6 md:grid-cols-2">
+                        <FormField
+                          control={form.control}
+                          name="statisticsSectionTitle"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>عنوان قسم الإحصائيات</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="إحصائيات" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="statisticsSectionDescription"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>وصف قسم الإحصائيات</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="أرقام عن المنح الدراسية والطلاب حول العالم" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <Separator className="my-4" />
+                      <h3 className="text-lg font-medium">محتوى قسم الشركاء</h3>
+                      <div className="grid gap-6 md:grid-cols-2">
+                        <FormField
+                          control={form.control}
+                          name="partnersSectionTitle"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>عنوان قسم الشركاء</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="شركاؤنا" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="partnersSectionDescription"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>وصف قسم الشركاء</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="المؤسسات والجامعات التي نتعاون معها" />
+                              </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -1242,90 +1434,51 @@ export default function SiteSettingsPage() {
                       </div>
                     </TabsContent>
                     
-                    {/* إعدادات متقدمة */}
-                    <TabsContent value="advanced" className="space-y-6">
-                      <div className="grid gap-6 md:grid-cols-1">
-                        <FormField
-                          control={form.control}
-                          name="enableNewsletter"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                              <div className="space-y-0.5">
-                                <FormLabel className="text-base">النشرة البريدية</FormLabel>
-                                <FormDescription>
-                                  تفعيل ميزة النشرة البريدية في الموقع
-                                </FormDescription>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="enableScholarshipSearch"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                              <div className="space-y-0.5">
-                                <FormLabel className="text-base">البحث عن المنح</FormLabel>
-                                <FormDescription>
-                                  تفعيل ميزة البحث عن المنح الدراسية
-                                </FormDescription>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="customCss"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>CSS مخصص</FormLabel>
-                              <FormControl>
-                                <Textarea {...field} placeholder="/* أضف أكواد CSS مخصصة هنا */" className="min-h-32 font-mono" />
-                              </FormControl>
+                    {/* الإشعارات */}
+                    <TabsContent value="notifications" className="space-y-6">
+                      <FormField
+                        control={form.control}
+                        name="enableNewsletter"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base">النشرة البريدية</FormLabel>
                               <FormDescription>
-                                أكواد CSS مخصصة للتحكم في مظهر الموقع
+                                تفعيل نظام النشرة البريدية واستقبال المشتركين
                               </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="enableScholarshipSearch"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base">البحث عن المنح</FormLabel>
+                              <FormDescription>
+                                تفعيل نظام البحث عن المنح الدراسية
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
                     </TabsContent>
                   </Tabs>
-                  
-                  <div className="flex justify-end space-x-4 space-x-reverse">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => form.reset()}
-                      disabled={updateMutation.isPending}
-                    >
-                      إلغاء التغييرات
-                    </Button>
-                    <Button 
-                      type="submit"
-                      disabled={updateMutation.isPending}
-                    >
-                      {updateMutation.isPending ? (
-                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></div>
-                      ) : null}
-                      حفظ الإعدادات
-                    </Button>
-                  </div>
                 </form>
               </Form>
             </CardContent>
