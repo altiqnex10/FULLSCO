@@ -48,8 +48,8 @@ interface AdminLayoutProps {
 
 const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps) => {
   const { isLoading: authLoading, isAuthenticated, isAdmin, user, logout } = useAuth();
-  const { settings } = useSiteSettings();
-  const isRtl = settings?.rtlDirection ?? true; // القيمة الافتراضية هي true لأننا نستخدم نظامًا بالعربية
+  const { siteSettings } = useSiteSettings();
+  const isRtl = siteSettings?.rtlDirection ?? true; // القيمة الافتراضية هي true لأننا نستخدم نظامًا بالعربية
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
   const [, navigate] = useLocation();
@@ -76,12 +76,12 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
   
   // تطبيق إعدادات RTL على الصفحة
   useEffect(() => {
-    if (settings) {
+    if (siteSettings) {
       // تطبيق اتجاه RTL على العنصر الجذر
       document.dir = isRtl ? 'rtl' : 'ltr';
       console.log('RTL direction set to:', isRtl);
     }
-  }, [settings, isRtl]);
+  }, [siteSettings, isRtl]);
 
   // تبديل وضع السمة
   const toggleTheme = () => {

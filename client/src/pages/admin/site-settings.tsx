@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
+import { useSiteSettings } from '@/hooks/use-site-settings';
 import { cn } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
@@ -337,6 +338,9 @@ export default function SiteSettingsPage() {
     },
   });
 
+  // استدعاء hook إعدادات الموقع
+  const { setRtlDirection } = useSiteSettings();
+
   // تقديم النموذج
   const onSubmit = (data: SiteSettingsFormValues) => {
     console.log('Form submitted with values:', data);
@@ -345,11 +349,8 @@ export default function SiteSettingsPage() {
     // إرسال البيانات من خلال mutation
     updateMutation.mutate(data);
     
-    // تطبيق إعدادات RTL مباشرة
-    if (document.dir !== (data.rtlDirection ? 'rtl' : 'ltr')) {
-      console.log('Updating document direction to:', data.rtlDirection ? 'rtl' : 'ltr');
-      document.dir = data.rtlDirection ? 'rtl' : 'ltr';
-    }
+    // تطبيق إعدادات RTL مباشرة باستخدام hook الإعدادات
+    setRtlDirection(data.rtlDirection);
   };
   
   // عرض شاشة التحميل
