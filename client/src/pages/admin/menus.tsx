@@ -400,36 +400,10 @@ export default function MenusPage() {
   }
 
   return (
-    <div className="bg-background min-h-screen relative overflow-x-hidden">
-      {/* السايدبار للجوال */}
-      <Sidebar 
-        isMobileOpen={sidebarOpen} 
-        onClose={() => {
-          console.log('Menus: closing sidebar');
-          setSidebarOpen(false);
-        }} 
-      />
-      
-      {/* المحتوى الرئيسي */}
-      <div className={cn(
-        "transition-all duration-300",
-        isMobile ? "w-full" : "mr-64"
-      )}>
-        <main className="p-4 md:p-6">
-          {/* زر فتح السايدبار في الجوال والهيدر */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div className="flex items-center">
-              {isMobile && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="ml-2" 
-                  onClick={() => setSidebarOpen(true)}
-                  aria-label="فتح القائمة"
-                >
-                  <MenuIcon className="h-5 w-5" />
-                </Button>
-              )}
+    <AdminLayout>
+      <div className="p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div className="flex items-center">
               <h1 className="text-xl md:text-2xl font-bold">إدارة القوائم والروابط</h1>
             </div>
             <div className="flex gap-2">
@@ -888,9 +862,8 @@ export default function MenusPage() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        </main>
       </div>
-    </div>
+    </AdminLayout>
   );
 
   // عرض جدول العناصر حسب نوع القائمة
