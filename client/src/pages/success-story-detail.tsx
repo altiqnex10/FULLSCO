@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRoute, Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import { queryClient } from '@/lib/queryClient';
 import { Helmet } from 'react-helmet';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,7 +56,7 @@ export default function SuccessStoryDetail() {
           toast({
             title: 'تم نسخ الرابط',
             description: 'تم نسخ رابط قصة النجاح إلى الحافظة',
-            variant: 'success',
+            variant: 'default',
           });
         } catch (err) {
           toast({

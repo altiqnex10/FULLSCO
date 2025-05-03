@@ -1,5 +1,6 @@
 import { Switch, Route, useLocation } from "wouter";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Suspense, lazy } from "react";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Scholarships from "@/pages/scholarships";
@@ -8,6 +9,10 @@ import Articles from "@/pages/articles";
 import ArticleDetail from "@/pages/article-detail";
 import StaticPage from "@/pages/static-page";
 import PageById from "@/pages/page-by-id";
+
+// استيراد صفحات قصص النجاح بشكل كسول
+const SuccessStories = lazy(() => import("@/pages/success-stories"));
+const SuccessStoryDetail = lazy(() => import("@/pages/success-story-detail"));
 
 // Admin Components
 import AdminDashboard from "@/pages/admin/dashboard";
@@ -114,24 +119,18 @@ function App() {
                     <Route path="/articles/:slug" component={ArticleDetail} />
                     {/* مسارات قصص النجاح */}
                     <Route path="/success-stories">
-                      {() => {
-                        const SuccessStories = React.lazy(() => import('@/pages/success-stories'));
-                        return (
-                          <React.Suspense fallback={<div className="flex justify-center items-center min-h-[60vh]">جاري التحميل...</div>}>
-                            <SuccessStories />
-                          </React.Suspense>
-                        );
-                      }}
+                      {() => (
+                        <Suspense fallback={<div className="flex justify-center items-center min-h-[60vh]">جاري التحميل...</div>}>
+                          <SuccessStories />
+                        </Suspense>
+                      )}
                     </Route>
                     <Route path="/success-stories/:slug">
-                      {({ params }) => {
-                        const SuccessStoryDetail = React.lazy(() => import('@/pages/success-story-detail'));
-                        return (
-                          <React.Suspense fallback={<div className="flex justify-center items-center min-h-[60vh]">جاري التحميل...</div>}>
-                            <SuccessStoryDetail />
-                          </React.Suspense>
-                        );
-                      }}
+                      {() => (
+                        <Suspense fallback={<div className="flex justify-center items-center min-h-[60vh]">جاري التحميل...</div>}>
+                          <SuccessStoryDetail />
+                        </Suspense>
+                      )}
                     </Route>
                     {/* مسارات الصفحات العامة باستخدام السلاق والمعرف */}
                     <Route path="/page/:slug" component={StaticPage} />

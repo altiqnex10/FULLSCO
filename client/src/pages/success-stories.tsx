@@ -1,22 +1,32 @@
 import { useState, useEffect } from 'react';
-import { useSuccessStories } from '@/hooks/use-success-stories';
 import { Link } from 'wouter';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
-import { Loader2, Calendar, User } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Calendar, ArrowLeft, User } from 'lucide-react';
 import PageHeader from '@/components/page-header';
 import Container from '@/components/ui/container';
 import { formatDate } from '@/lib/utils';
 
 export default function SuccessStories() {
-  const { successStories, isLoading } = useSuccessStories();
   const [isClient, setIsClient] = useState(false);
 
-  // تحديث حالة العميل بعد التحميل
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const { data: stories, isLoading, error } = useQuery({
+    queryKey: ['/api/success-stories'],
+    queryFn: async () => {
+      const response = await fetch('/api/success-stories');
+      if (!response.ok) {
+        throw new Error('Failed to fetch success stories');
+      }
+      return response.json();
+    },
+    enabled: isClient,
+  });
 
   if (!isClient) {
     return null;
@@ -26,66 +36,79 @@ export default function SuccessStories() {
     <>
       <Helmet>
         <title>قصص النجاح | FULLSCO</title>
-        <meta name="description" content="تجارب حقيقية للطلاب الذين حصلوا على منح دراسية وتفوقوا في دراستهم" />
+        <meta name="description" content="استمتع بقراءة قصص نجاح طلابنا الذين حصلوا على منح دراسية عالمية" />
       </Helmet>
 
       <PageHeader
         title="قصص النجاح"
-        description="تجارب حقيقية للطلاب الذين حصلوا على منح دراسية وتفوقوا في دراستهم"
-        bgClassName="bg-gradient-to-r from-purple-500 to-indigo-600 dark:from-purple-700 dark:to-indigo-800"
+        description="تجارب حقيقية للطلاب الذين حصلوا على منح دراسية حول العالم"
       />
 
-      <Container>
-        <div className="py-12">
-          {isLoading ? (
-            <div className="flex justify-center items-center h-60">
-              <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            </div>
-          ) : successStories.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {successStories.map((story) => (
-                <Link key={story.id} href={`/success-stories/${story.slug}`}>
-                  <Card className="h-full hover:shadow-lg transition-shadow duration-300 cursor-pointer">
+      <Container className="py-8 md:py-10">
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
+            <p>جاري تحميل قصص النجاح...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-red-500 mb-4">حدث خطأ أثناء تحميل قصص النجاح</p>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              إعادة المحاولة
+            </Button>
+          </div>
+        ) : stories && stories.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {stories.map((story) => (
+              <Link key={story.id} href={`/success-stories/${story.slug}`}>
+                <a className="block h-full">
+                  <Card className="h-full hover:shadow-md transition-shadow overflow-hidden border-0 shadow-sm">
                     {story.imageUrl && (
-                      <div className="aspect-[16/9] overflow-hidden rounded-t-lg">
-                        <img 
-                          src={story.imageUrl} 
-                          alt={story.title} 
-                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      <div className="relative h-48 w-full overflow-hidden">
+                        <img
+                          src={story.imageUrl}
+                          alt={story.title}
+                          className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300"
                         />
                       </div>
                     )}
-                    <CardHeader className="pb-2">
-                      <CardTitle className="line-clamp-2">{story.title}</CardTitle>
-                      <div className="flex items-center text-sm text-muted-foreground space-x-2 space-x-reverse">
-                        <User className="h-4 w-4 ml-1" />
-                        <span className="font-medium text-foreground">{story.name}</span>
-                        <span className="text-muted-foreground">•</span>
-                        <Calendar className="h-4 w-4 ml-1" />
-                        <span>{formatDate(story.createdAt)}</span>
+                    <CardContent className="p-5">
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-3">
+                        <div className="flex items-center">
+                          <User className="h-4 w-4 ml-1" />
+                          <span>{story.name}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 ml-1" />
+                          <span>{formatDate(story.createdAt)}</span>
+                        </div>
                       </div>
-                    </CardHeader>
-                    <CardContent className="pb-4">
-                      <CardDescription className="line-clamp-3">
-                        {story.briefContent || story.title}
-                      </CardDescription>
+                      
+                      <h2 className="text-xl font-bold mb-2 hover:text-primary transition-colors line-clamp-2">
+                        {story.title}
+                      </h2>
+                      
+                      {story.briefContent && (
+                        <p className="text-muted-foreground line-clamp-3 mb-4">
+                          {story.briefContent}
+                        </p>
+                      )}
+                      
+                      <div className="flex items-center text-primary font-medium">
+                        قراءة المزيد
+                        <ArrowLeft className="h-4 w-4 mr-1" />
+                      </div>
                     </CardContent>
-                    <CardFooter>
-                      <Button variant="outline" className="w-full">
-                        قراءة القصة كاملة
-                      </Button>
-                    </CardFooter>
                   </Card>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <h3 className="text-xl font-medium mb-2">لا توجد قصص نجاح بعد</h3>
-              <p className="text-muted-foreground mb-6">سيتم إضافة قصص نجاح قريبًا. تابعنا للاطلاع على تجارب الطلاب.</p>
-            </div>
-          )}
-        </div>
+                </a>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground mb-4">لا توجد قصص نجاح متاحة حاليًا</p>
+          </div>
+        )}
       </Container>
     </>
   );
