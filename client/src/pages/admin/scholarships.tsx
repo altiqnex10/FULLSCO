@@ -505,7 +505,7 @@ const AdminScholarships = () => {
     }>
       <div className="w-full mx-auto">
         {/* نظرة عامة عن المنح الدراسية والإحصائيات */}
-        <div className="grid grid-cols-2 gap-2 mb-3">
+        <div className="grid grid-cols-2 gap-2 mb-5">
           <div className="flex flex-col items-center justify-center bg-muted/30 rounded-md py-2">
             <div className="flex items-center justify-center mb-1">
               <Award className="h-4 w-4 text-primary ml-1.5" />
@@ -561,30 +561,41 @@ const AdminScholarships = () => {
           </div>
         </div>
 
-        {/* قسم البحث */}
-        <div className="flex justify-between items-center gap-2 mb-3 bg-card p-3 border rounded-md">
-          <div className="relative flex-1 min-w-0">
-            <Search className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="ابحث عن المنح..."
-              className="pr-8 h-9 text-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        {/* قسم البحث وضوابط الصفحة */}
+        <div className="mb-5 flex flex-col md:flex-row gap-2">
+          <div className="w-full md:w-1/2">
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="ابحث عن المنح..."
+                className="pr-8 h-9 text-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
-
-          <div className="flex items-center text-sm text-muted-foreground shrink-0">
-            <span className="whitespace-nowrap">{filteredScholarships.length}/{scholarships?.length || 0}</span>
-            {activeFilterCount > 0 && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="ml-1 h-9"
-                onClick={clearFilters}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
+          
+          <div className="flex items-center gap-2 md:mr-auto">
+            {/* زر التبديل بين طرق العرض */}
+            <Button 
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1"
+              onClick={() => handleViewModeChange(viewMode === "table" ? "card" : "table")}
+            >
+              {viewMode === "table" ? <LayoutGrid className="h-4 w-4 ml-1" /> : <BookOpen className="h-4 w-4 ml-1" />}
+              {viewMode === "table" ? "بطاقات" : "جدول"}
+            </Button>
+            
+            {/* زر إضافة منحة جديدة */}
+            <Button 
+              size="sm" 
+              className="h-9"
+              onClick={() => navigate('/admin/scholarships/create')}
+            >
+              <Plus className="h-4 w-4 ml-1" />
+              منحة جديدة
+            </Button>
           </div>
         </div>
 
