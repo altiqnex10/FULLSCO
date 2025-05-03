@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -504,70 +505,84 @@ const AdminScholarships = () => {
     }>
       <div className="w-full mx-auto">
         {/* نظرة عامة عن المنح الدراسية والإحصائيات */}
-        <div className="grid grid-cols-3 gap-1 mb-2">
-          <div className="flex flex-col items-center justify-center bg-muted/50 rounded-md p-1">
-            <div className="flex items-center justify-center">
-              <Award className="h-3 w-3 text-primary ml-1" />
-              <span className="text-xs">إجمالي المنح</span>
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <div className="flex flex-col items-center justify-center bg-muted/30 rounded-md py-2">
+            <div className="flex items-center justify-center mb-1">
+              <Award className="h-4 w-4 text-primary ml-1.5" />
+              <span className="text-sm">إجمالي المنح</span>
             </div>
             {isLoading ? (
-              <Skeleton className="h-4 w-8 mt-1" />
+              <Skeleton className="h-5 w-10" />
             ) : (
-              <div className="text-sm font-semibold mt-0.5">{scholarships?.length || 0}</div>
+              <div className="text-lg font-bold">{scholarships?.length || 0}</div>
             )}
           </div>
 
-          <div className="flex flex-col items-center justify-center bg-amber-50 rounded-md p-1">
-            <div className="flex items-center justify-center">
-              <Star className="h-3 w-3 text-amber-500 ml-1" />
-              <span className="text-xs">المنح المميزة</span>
+          <div className="flex flex-col items-center justify-center bg-amber-50 rounded-md py-2">
+            <div className="flex items-center justify-center mb-1">
+              <Star className="h-4 w-4 text-amber-500 ml-1.5" />
+              <span className="text-sm">المنح المميزة</span>
             </div>
             {isLoading ? (
-              <Skeleton className="h-4 w-8 mt-1" />
+              <Skeleton className="h-5 w-10" />
             ) : (
-              <div className="text-sm font-semibold mt-0.5">
+              <div className="text-lg font-bold">
                 {scholarships?.filter(s => s.isFeatured).length || 0}
               </div>
             )}
           </div>
 
-          <div className="flex flex-col items-center justify-center bg-blue-50 rounded-md p-1">
-            <div className="flex items-center justify-center">
-              <Globe className="h-3 w-3 text-blue-500 ml-1" />
-              <span className="text-xs">الدول</span>
+          <div className="flex flex-col items-center justify-center bg-blue-50 rounded-md py-2">
+            <div className="flex items-center justify-center mb-1">
+              <Globe className="h-4 w-4 text-blue-500 ml-1.5" />
+              <span className="text-sm">الدول</span>
             </div>
             {isLoading ? (
-              <Skeleton className="h-4 w-8 mt-1" />
+              <Skeleton className="h-5 w-10" />
             ) : (
-              <div className="text-sm font-semibold mt-0.5">
+              <div className="text-lg font-bold">
                 {countries?.length || 0}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col items-center justify-center bg-green-50 rounded-md py-2">
+            <div className="flex items-center justify-center mb-1">
+              <GraduationCap className="h-4 w-4 text-green-600 ml-1.5" />
+              <span className="text-sm">المستويات</span>
+            </div>
+            {isLoading ? (
+              <Skeleton className="h-5 w-10" />
+            ) : (
+              <div className="text-lg font-bold">
+                {levels?.length || 0}
               </div>
             )}
           </div>
         </div>
 
         {/* قسم البحث */}
-        <div className="flex justify-between items-center gap-1 mb-2 bg-card px-1.5 py-1 border rounded-md">
+        <div className="flex justify-between items-center gap-2 mb-3 bg-card p-3 border rounded-md">
           <div className="relative flex-1 min-w-0">
-            <Search className="absolute right-1.5 top-1.5 h-3 w-3 text-muted-foreground" />
+            <Search className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="ابحث عن المنح..."
-              className="pr-6 h-6 text-xs min-h-0"
+              className="pr-8 h-9 text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
-          <div className="flex items-center text-[10px] text-muted-foreground shrink-0 ml-0.5">
+          <div className="flex items-center text-sm text-muted-foreground shrink-0">
             <span className="whitespace-nowrap">{filteredScholarships.length}/{scholarships?.length || 0}</span>
             {activeFilterCount > 0 && (
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="ml-0.5 h-5 text-[10px] px-1 min-w-0"
+                className="ml-1 h-9"
                 onClick={clearFilters}
               >
-                <X className="h-3 w-3" />
+                <X className="h-4 w-4" />
               </Button>
             )}
           </div>
@@ -604,33 +619,33 @@ const AdminScholarships = () => {
         ) : filteredScholarships.length > 0 ? (
           isMobile ? (
             // عرض البطاقات على الجوال دائماً
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-1 gap-2">
               {filteredScholarships.map((scholarship) => (
                 <div key={scholarship.id} className="border rounded-md bg-card overflow-hidden">
-                  <div className="p-2 relative">
-                    <h3 className="text-[11px] font-medium pr-5 truncate">
+                  <div className="p-3 relative">
+                    <h3 className="font-medium text-sm mb-2 pr-6 truncate">
                       {scholarship.title}
                     </h3>
                     
-                    <div className="flex flex-wrap gap-1 mt-1">
+                    <div className="flex flex-wrap gap-1.5 mb-2">
                       {scholarship.isFeatured && (
-                        <div className="inline-flex items-center text-[9px] text-amber-700 bg-amber-50 py-0.5 px-1 rounded">
-                          <Star className="h-2 w-2 ml-0.5 fill-amber-500 text-amber-500" />
+                        <div className="inline-flex items-center text-xs text-amber-700 bg-amber-50 py-1 px-2 rounded">
+                          <Star className="h-3.5 w-3.5 ml-1 fill-amber-500 text-amber-500" />
                           مميز
                         </div>
                       )}
-                      <div className="inline-flex items-center text-[9px] text-muted-foreground bg-muted/40 py-0.5 px-1 rounded">
-                        <MapPin className="h-2 w-2 ml-0.5" />
+                      <div className="inline-flex items-center text-xs text-muted-foreground bg-muted/40 py-1 px-2 rounded">
+                        <MapPin className="h-3.5 w-3.5 ml-1" />
                         {getCountryName(scholarship.countryId)}
                       </div>
-                      <div className="inline-flex items-center text-[9px] text-muted-foreground bg-muted/40 py-0.5 px-1 rounded">
-                        <GraduationCap className="h-2 w-2 ml-0.5" />
+                      <div className="inline-flex items-center text-xs text-muted-foreground bg-muted/40 py-1 px-2 rounded">
+                        <GraduationCap className="h-3.5 w-3.5 ml-1" />
                         {getLevelName(scholarship.levelId)}
                       </div>
                     </div>
                     
-                    <div className="text-[9px] text-muted-foreground flex items-center mt-1">
-                      <Clock className="h-2 w-2 flex-shrink-0 ml-0.5" />
+                    <div className="text-xs text-muted-foreground flex items-center">
+                      <Clock className="h-3.5 w-3.5 flex-shrink-0 ml-1" />
                       <span className="truncate">
                         {scholarship.deadline ? 
                           `آخر موعد: ${scholarship.deadline}` : 
@@ -639,38 +654,36 @@ const AdminScholarships = () => {
                       </span>
                     </div>
                     
-                    <div className="absolute top-1 left-1">
+                    <div className="absolute top-2 left-2">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="h-5 w-5 p-0"
+                            className="h-7 w-7 p-0"
                           >
-                            <MoreHorizontal className="h-3 w-3" />
+                            <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-24">
+                        <DropdownMenuContent align="end">
                           <DropdownMenuItem 
                             onClick={() => navigate(`/admin/scholarships/edit/${scholarship.id}`)}
-                            className="text-[10px] py-1"
                           >
-                            <Edit className="ml-1 h-2.5 w-2.5" />
+                            <Edit className="ml-2 h-4 w-4" />
                             تعديل
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => window.open(`/scholarships/${scholarship.slug}`, '_blank')}
-                            className="text-[10px] py-1"
                           >
-                            <ExternalLink className="ml-1 h-2.5 w-2.5" />
+                            <ExternalLink className="ml-2 h-4 w-4" />
                             عرض
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
-                            className="text-destructive focus:text-destructive text-[10px] py-1"
+                            className="text-destructive focus:text-destructive"
                             onClick={() => handleDeleteClick(scholarship.id)}
                           >
-                            <Trash2 className="ml-1 h-2.5 w-2.5" />
+                            <Trash2 className="ml-2 h-4 w-4" />
                             حذف
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -678,25 +691,37 @@ const AdminScholarships = () => {
                     </div>
                   </div>
                   
-                  <div className="flex border-t py-0.5 px-1 bg-muted/30 justify-end gap-1">
+                  <div className="flex border-t py-1.5 px-3 bg-muted/30 justify-between">
                     <Button 
-                      variant="ghost" 
+                      variant="outline" 
                       size="sm"
-                      className="h-5 px-1 text-[9px] min-w-0 text-destructive"
-                      onClick={() => handleDeleteClick(scholarship.id)}
+                      className="h-8 px-2 text-xs"
+                      onClick={() => window.open(`/scholarships/${scholarship.slug}`, '_blank')}
                     >
-                      <Trash2 className="h-2.5 w-2.5 ml-0.5" />
-                      حذف
+                      <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                      عرض
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      className="h-5 px-1 text-[9px] min-w-0"
-                      onClick={() => navigate(`/admin/scholarships/edit/${scholarship.id}`)}
-                    >
-                      <Edit className="h-2.5 w-2.5 ml-0.5" />
-                      تعديل
-                    </Button>
+                    
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        className="h-8 px-2 text-xs"
+                        onClick={() => handleDeleteClick(scholarship.id)}
+                      >
+                        <Trash2 className="ml-1.5 h-3.5 w-3.5" />
+                        حذف
+                      </Button>
+                      <Button 
+                        variant="secondary" 
+                        size="sm"
+                        className="h-8 px-2 text-xs"
+                        onClick={() => navigate(`/admin/scholarships/edit/${scholarship.id}`)}
+                      >
+                        <Edit className="ml-1.5 h-3.5 w-3.5" />
+                        تعديل
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
