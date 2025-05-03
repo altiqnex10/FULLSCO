@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation, Redirect } from 'wouter';
+import { useLocation, Link, Redirect } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import Sidebar from '@/components/admin/sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -13,7 +13,11 @@ import {
   LogOut,
   Search,
   Sun,
-  Moon
+  Moon,
+  Home,
+  Plus,
+  LayoutDashboard,
+  Sparkles
 } from 'lucide-react';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
@@ -26,9 +30,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { NotificationBell } from '@/components/notifications/notification-provider';
 import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -43,6 +51,8 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
   const isMobile = useIsMobile();
   const [, navigate] = useLocation();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // التحقق من تسجيل الدخول
   useEffect(() => {
@@ -73,8 +83,10 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
   if (authLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background dark:bg-gray-900">
-        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground animate-pulse">جاري تحميل لوحة التحكم...</p>
+        <div className="p-4 rounded-full bg-primary/10 mb-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+        <p className="text-muted-foreground animate-pulse font-medium">جاري تحميل لوحة التحكم...</p>
       </div>
     );
   }
@@ -89,9 +101,17 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
     navigate('/admin/login');
   };
 
+  // قائمة الإجراءات السريعة
+  const quickActions = [
+    { label: 'منحة جديدة', href: '/admin/scholarships/create', icon: Plus },
+    { label: 'مقال جديد', href: '/admin/posts/create', icon: Plus },
+    { label: 'صفحة جديدة', href: '/admin/pages/create', icon: Plus },
+    { label: 'لوحة التحكم', href: '/admin', icon: LayoutDashboard },
+  ];
+
   return (
     <div className={`min-h-screen bg-background dark:bg-gray-900 flex text-foreground dark:text-gray-100`} dir="rtl">
-      {/* السايدبار */}
+      {/* السايدبار - الإصدار الحالي */}
       <Sidebar 
         isMobileOpen={sidebarOpen} 
         onClose={() => setSidebarOpen(false)} 
@@ -105,7 +125,7 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
         )}
       >
         {/* الهيدر */}
-        <header className="sticky top-0 z-30 border-b bg-background/95 dark:bg-gray-900/95 backdrop-blur py-3 px-4 shadow-sm">
+        <header className="sticky top-0 z-30 border-b bg-background/95 dark:bg-gray-900/95 backdrop-blur supports-backdrop-blur:bg-background/60 py-3 px-3 md:px-4 shadow-sm">
           <div className="flex items-center justify-between max-w-full mx-auto">
             <div className="flex items-center gap-2">
               {isMobile && (
@@ -119,25 +139,84 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
                   <Menu className="h-5 w-5" />
                 </Button>
               )}
-              <h1 className="text-xl md:text-2xl font-bold">{title}</h1>
+              <h1 className="text-xl md:text-2xl font-bold truncate">{title}</h1>
             </div>
             
-            <div className="flex items-center gap-2">
-              {/* بحث عام */}
+            <div className="flex items-center gap-1 md:gap-2">
+              {/* بحث عام - للشاشات الأكبر */}
               <div className="relative hidden md:block ml-2">
                 <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="بحث سريع..."
-                  className="pl-3 pr-9 w-[300px] bg-white dark:bg-gray-800"
+                  className="pl-3 pr-9 w-[220px] lg:w-[300px] bg-muted/40 focus:bg-background dark:bg-gray-800/40 dark:focus:bg-gray-800"
                 />
               </div>
+              
+              {/* ايقونة البحث للجوال */}
+              <Sheet open={searchOpen} onOpenChange={setSearchOpen}>
+                <SheetTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="md:hidden"
+                    aria-label="بحث"
+                  >
+                    <Search className="h-[1.2rem] w-[1.2rem]" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="top" className="h-auto pb-0">
+                  <div className="p-4">
+                    <div className="relative">
+                      <Search className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                      <Input
+                        placeholder="ابحث في لوحة التحكم..."
+                        className="pl-3 pr-10 bg-muted/40 h-10"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                    <div className="mt-4 pb-6">
+                      <h3 className="text-sm font-medium text-muted-foreground mb-2">وصول سريع</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button variant="outline" size="sm" className="justify-start" asChild>
+                          <Link href="/admin/scholarships">
+                            <Search className="ml-2 h-3.5 w-3.5" />
+                            <span className="text-xs">المنح الدراسية</span>
+                          </Link>
+                        </Button>
+                        <Button variant="outline" size="sm" className="justify-start" asChild>
+                          <Link href="/admin/users">
+                            <Search className="ml-2 h-3.5 w-3.5" />
+                            <span className="text-xs">المستخدمين</span>
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+              
+              {/* زر العودة للموقع */}
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="hidden sm:flex"
+                title="العودة للموقع الرئيسي"
+                asChild
+              >
+                <Link href="/">
+                  <Home className="h-[1.2rem] w-[1.2rem]" />
+                </Link>
+              </Button>
               
               {/* زر تبديل الثيم */}
               <Button 
                 variant="ghost" 
                 size="icon"
                 onClick={toggleTheme}
-                className="ml-1"
+                className="md:ml-1"
+                title={theme === 'light' ? 'الوضع المظلم' : 'الوضع المضيء'}
               >
                 {theme === 'light' ? <Moon className="h-[1.2rem] w-[1.2rem]" /> : <Sun className="h-[1.2rem] w-[1.2rem]" />}
               </Button>
@@ -145,19 +224,51 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
               {/* زر الإشعارات */}
               <NotificationBell />
               
+              {/* قائمة الإجراءات السريعة للجوال */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="rounded-full w-8 h-8 border-dashed border-primary/70">
+                    <Plus className="h-4 w-4 text-primary" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuLabel>إجراءات سريعة</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    {quickActions.map((action) => (
+                      <DropdownMenuItem
+                        key={action.href}
+                        className="flex items-center cursor-pointer"
+                        onClick={() => navigate(action.href)}
+                      >
+                        <action.icon className="ml-2 h-4 w-4 text-primary" />
+                        {action.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
               {/* قائمة المستخدم */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                        {user ? 'AD' : 'UN'}
+                        {user && typeof user === 'object' ? (user.username || 'AD').substring(0, 2).toUpperCase() : 'AD'}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
-                  <DropdownMenuLabel>حسابي</DropdownMenuLabel>
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col">
+                      <span>{user && typeof user === 'object' && user.fullName ? user.fullName : 'مدير النظام'}</span>
+                      <span className="text-xs font-normal text-muted-foreground">
+                        {user && typeof user === 'object' && user.email ? user.email : 'admin@fullsco.com'}
+                      </span>
+                    </div>
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="flex items-center cursor-pointer"
@@ -168,10 +279,17 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="flex items-center cursor-pointer"
-                    onClick={() => navigate('/admin/settings')}
+                    onClick={() => navigate('/admin/site-settings')}
                   >
                     <Settings className="ml-2 h-4 w-4" />
-                    الإعدادات
+                    إعدادات الموقع
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/" className="flex items-center cursor-pointer">
+                      <Home className="ml-2 h-4 w-4" />
+                      العودة للموقع
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -184,11 +302,11 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
                 </DropdownMenuContent>
               </DropdownMenu>
               
-              {/* أزرار إضافية - إذا كانت موجودة */}
+              {/* زر وشريط الإجراءات - إذا كانت موجودة */}
               {actions && (
                 <>
-                  <Separator orientation="vertical" className="h-6 mx-2" />
-                  <div className="flex items-center gap-2">
+                  <Separator orientation="vertical" className="h-6 mx-1 md:mx-2 hidden sm:block" />
+                  <div className="flex items-center sm:gap-2">
                     {actions}
                   </div>
                 </>
@@ -199,18 +317,83 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
 
         {/* مسار التنقل */}
         {breadcrumbs && (
-          <div className="bg-muted/30 dark:bg-gray-800/30 px-4 py-2 text-sm text-muted-foreground">
+          <div className="bg-muted/30 dark:bg-gray-800/30 px-3 md:px-4 py-2 text-sm text-muted-foreground">
             {breadcrumbs}
           </div>
         )}
 
+        {/* ناڤ بار مبسط للجوال */}
+        {isMobile && (
+          <div className="fixed bottom-0 right-0 left-0 z-30 bg-background/95 dark:bg-gray-900/95 backdrop-blur supports-backdrop-blur:bg-background/60 border-t py-2 px-4">
+            <div className="flex justify-between items-center">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="flex flex-col items-center justify-center h-auto py-1 px-3 gap-1"
+                onClick={() => navigate('/admin')}
+              >
+                <LayoutDashboard className="h-5 w-5" />
+                <span className="text-xs">الرئيسية</span>
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="flex flex-col items-center justify-center h-auto py-1 px-3 gap-1"
+                onClick={() => navigate('/admin/scholarships')}
+              >
+                <Sparkles className="h-5 w-5" />
+                <span className="text-xs">المنح</span>
+              </Button>
+              
+              <div className="-mt-8">
+                <Button 
+                  size="lg" 
+                  className="h-14 w-14 rounded-full shadow-lg flex items-center justify-center"
+                  onClick={() => navigate('/admin/scholarships/create')}
+                >
+                  <Plus className="h-7 w-7" />
+                </Button>
+              </div>
+              
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="flex flex-col items-center justify-center h-auto py-1 px-3 gap-1"
+                onClick={() => navigate('/admin/posts')}
+              >
+                <Bell className="h-5 w-5" />
+                <span className="text-xs">المقالات</span>
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="flex flex-col items-center justify-center h-auto py-1 px-3 gap-1"
+                onClick={() => navigate('/admin/site-settings')}
+              >
+                <Settings className="h-5 w-5" />
+                <span className="text-xs">الإعدادات</span>
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* المحتوى */}
-        <div className="flex-grow p-4 md:p-6">
+        <div className={cn(
+          "flex-grow p-3 md:p-4 lg:p-6",
+          // إضافة مساحة أسفل الصفحة عند وجود شريط التنقل السفلي للجوال
+          isMobile && "pb-20"
+        )}>
           {children}
         </div>
         
         {/* تذييل الصفحة */}
-        <footer className="py-3 px-6 text-center border-t text-sm text-muted-foreground">
+        <footer className={cn(
+          "py-3 px-6 text-center border-t text-sm text-muted-foreground",
+          // إخفاء تذييل الصفحة على الجوال لتوفير مساحة
+          isMobile && "hidden"
+        )}>
           <p>© {new Date().getFullYear()} FULLSCO. جميع الحقوق محفوظة.</p>
         </footer>
       </main>
