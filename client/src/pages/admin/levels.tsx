@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlusCircle, Edit, Trash2, RefreshCw, Check, X, Menu } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, RefreshCw, Check, X } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { cn } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,8 +44,6 @@ export default function LevelsPage() {
   const [selectedLevel, setSelectedLevel] = useState<Level | null>(null);
   const { isLoading: authLoading, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
-  const isMobile = useIsMobile();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // التحقق من تسجيل الدخول
   useEffect(() => {
