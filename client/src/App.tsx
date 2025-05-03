@@ -112,6 +112,27 @@ function App() {
                     <Route path="/scholarships/:slug" component={ScholarshipDetail} />
                     <Route path="/articles" component={Articles} />
                     <Route path="/articles/:slug" component={ArticleDetail} />
+                    {/* مسارات قصص النجاح */}
+                    <Route path="/success-stories">
+                      {() => {
+                        const SuccessStories = React.lazy(() => import('@/pages/success-stories'));
+                        return (
+                          <React.Suspense fallback={<div className="flex justify-center items-center min-h-[60vh]">جاري التحميل...</div>}>
+                            <SuccessStories />
+                          </React.Suspense>
+                        );
+                      }}
+                    </Route>
+                    <Route path="/success-stories/:slug">
+                      {({ params }) => {
+                        const SuccessStoryDetail = React.lazy(() => import('@/pages/success-story-detail'));
+                        return (
+                          <React.Suspense fallback={<div className="flex justify-center items-center min-h-[60vh]">جاري التحميل...</div>}>
+                            <SuccessStoryDetail />
+                          </React.Suspense>
+                        );
+                      }}
+                    </Route>
                     {/* مسارات الصفحات العامة باستخدام السلاق والمعرف */}
                     <Route path="/page/:slug" component={StaticPage} />
                     <Route path="/pages/:id" component={PageById} />
