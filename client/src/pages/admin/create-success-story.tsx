@@ -1,267 +1,352 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Save } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useLocation } from 'wouter';
-import AdminLayout from '@/components/admin/admin-layout';
+import { ArrowLeft, Check, Loader2, Menu } from 'lucide-react';
 
-// Types
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+import Sidebar from '@/components/admin/sidebar';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import MediaSelector from '@/components/ui/media-selector';
+import RichEditor from '@/components/ui/rich-editor';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+// زودج سكيما للتحقق من صحة البيانات
+const successStorySchema = z.object({
+  name: z.string().min(1, 'اسم الشخص مطلوب'),
+  title: z.string().min(1, 'العنوان مطلوب'),
+  content: z.string().min(1, 'المحتوى مطلوب'),
+  scholarshipId: z.string().optional().nullable(),
+  isPublished: z.boolean().default(true),
+  featuredImage: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof successStorySchema>;
+
 type Scholarship = {
   id: number;
   title: string;
 };
 
-type SuccessStoryData = {
-  name: string;
-  title: string;
-  content: string;
-  scholarshipId?: number | null;
-  photo?: string | null;
-  isPublished: boolean;
-};
-
 const CreateSuccessStory = () => {
-  const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
-  
-  // State for form data
-  const [formData, setFormData] = useState<SuccessStoryData>({
-    name: '',
-    title: '',
-    content: '',
-    scholarshipId: null,
-    photo: null,
-    isPublished: false
-  });
-  
-  // Handle text input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-  
-  // Handle checkbox changes
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: checked
-    }));
-  };
+  const [, navigate] = useLocation();
+  const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isLoading: authLoading, isAuthenticated } = useAuth();
 
-  // Fetch scholarships for dropdown
-  const { data: scholarships, isLoading: isLoadingScholarships } = useQuery<Scholarship[]>({
+  // التحقق من تسجيل الدخول
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/admin/login');
+    }
+  }, [authLoading, isAuthenticated, navigate]);
+
+  // جلب المنح الدراسية للقائمة المنسدلة
+  const { data: scholarships = [] } = useQuery<Scholarship[]>({
     queryKey: ['/api/scholarships'],
+    enabled: isAuthenticated,
   });
-  
-  // Mutation for creating success story
+
+  // إعداد نموذج react-hook-form
+  const form = useForm<FormValues>({
+    resolver: zodResolver(successStorySchema),
+    defaultValues: {
+      name: '',
+      title: '',
+      content: '',
+      scholarshipId: null,
+      isPublished: true,
+      featuredImage: '',
+    },
+  });
+
+  // إنشاء قصة نجاح جديدة
   const createMutation = useMutation({
-    mutationFn: async (data: SuccessStoryData) => {
-      // تحويل photo إلى imageUrl كما يتوقع الخادم
+    mutationFn: async (data: FormValues) => {
+      // تحويل featuredImage إلى imageUrl كما يتوقع الخادم
       const payload = {
         ...data,
-        imageUrl: data.photo, // تحويل photo إلى imageUrl
+        imageUrl: data.featuredImage, // تحويل featuredImage إلى imageUrl
+        scholarshipId: data.scholarshipId ? parseInt(data.scholarshipId) : null,
       };
       
-      console.log("بيانات قصة النجاح للإرسال:", payload);
+      console.log("بيانات قصة النجاح الجديدة للإرسال:", payload);
       
       const response = await fetch('/api/success-stories', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        credentials: 'include'
       });
       
       if (!response.ok) {
-        throw new Error('حدث خطأ أثناء حفظ قصة النجاح');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'فشل في إضافة قصة النجاح');
       }
       
-      return await response.json();
+      return response.json();
     },
     onSuccess: () => {
-      // Invalidate cache and redirect
+      // تحديث ذاكرة التخزين المؤقت
       queryClient.invalidateQueries({ queryKey: ['/api/success-stories'] });
-      setLocation('/admin/success-stories');
+      
+      toast({ 
+        title: 'تم الإضافة بنجاح', 
+        description: 'تمت إضافة قصة النجاح الجديدة بنجاح' 
+      });
+      
+      // العودة إلى صفحة قصص النجاح
+      navigate('/admin/success-stories');
     },
-  });
-  
-  // Form submission handler
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate form
-    if (!formData.name || !formData.title || !formData.content) {
-      alert('يرجى ملء جميع الحقول المطلوبة');
-      return;
+    onError: (error) => {
+      toast({ 
+        title: 'خطأ!', 
+        description: `فشل في إضافة قصة النجاح: ${error.message}`, 
+        variant: 'destructive' 
+      });
     }
-    
-    // Convert scholarshipId to number if it exists
-    const dataToSubmit = {
-      ...formData,
-      scholarshipId: formData.scholarshipId ? Number(formData.scholarshipId) : null
-    };
-    
-    // Submit data
-    createMutation.mutate(dataToSubmit);
+  });
+
+  // معالجة إرسال النموذج
+  const onSubmit = (data: FormValues) => {
+    createMutation.mutate(data);
   };
 
-  // Header actions
-  const actions = (
-    <button
-      onClick={() => setLocation('/admin/success-stories')}
-      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 flex items-center gap-2"
-    >
-      <ArrowRight className="h-4 w-4" />
-      العودة للقائمة
-    </button>
-  );
-  
+  // إنتاج slug من العنوان (إذا احتجنا لاحقًا)
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]+/g, '')
+      .replace(/\-\-+/g, '-');
+  };
+
+  // في حالة تحميل بيانات المصادقة أو عدم تسجيل الدخول
+  if (authLoading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        جاري التحميل...
+      </div>
+    );
+  }
+
   return (
-    <AdminLayout title="إضافة قصة نجاح جديدة" actions={actions}>
-      <form onSubmit={handleSubmit}>
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-medium mb-4 pb-2 border-b">بيانات قصة النجاح</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Name */}
-            <div className="flex flex-col">
-              <label htmlFor="name" className="mb-2 font-medium text-gray-700">
-                اسم صاحب القصة <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="أدخل اسم صاحب القصة"
-                className="border p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-            
-            {/* Title */}
-            <div className="flex flex-col">
-              <label htmlFor="title" className="mb-2 font-medium text-gray-700">
-                عنوان القصة <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="أدخل عنوان القصة"
-                className="border p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-          </div>
-          
-          {/* Content */}
-          <div className="mb-6">
-            <label htmlFor="content" className="mb-2 font-medium text-gray-700 block">
-              محتوى القصة <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              id="content"
-              name="content"
-              value={formData.content}
-              onChange={handleChange}
-              placeholder="أدخل تفاصيل قصة النجاح"
-              className="border p-3 rounded-md w-full h-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-          
-          {/* Related Scholarship */}
-          <div className="mb-6">
-            <label htmlFor="scholarshipId" className="mb-2 font-medium text-gray-700 block">
-              المنحة المرتبطة
-            </label>
-            <select
-              id="scholarshipId"
-              name="scholarshipId"
-              value={formData.scholarshipId || ''}
-              onChange={handleChange}
-              className="border p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">- اختر منحة -</option>
-              {isLoadingScholarships ? (
-                <option disabled>جاري تحميل المنح...</option>
-              ) : (
-                scholarships?.map(scholarship => (
-                  <option key={scholarship.id} value={scholarship.id}>
-                    {scholarship.title}
-                  </option>
-                ))
-              )}
-            </select>
-          </div>
-          
-          {/* Photo - Placeholder for future implementation */}
-          <div className="mb-6">
-            <label htmlFor="photo" className="mb-2 font-medium text-gray-700 block">
-              الصورة (اختياري)
-            </label>
-            <div className="border p-4 rounded-md bg-gray-50 text-center">
-              <p className="text-gray-500 mb-2">خاصية رفع الصور ستكون متاحة قريباً</p>
-            </div>
-          </div>
-          
-          {/* Publish Status */}
-          <div className="mb-6">
+    <div className="bg-background min-h-screen relative overflow-x-hidden">
+      {/* السايدبار للجوال */}
+      <Sidebar 
+        isMobileOpen={sidebarOpen} 
+        onClose={() => {
+          console.log('Create Success Story: closing sidebar');
+          setSidebarOpen(false);
+        }} 
+      />
+      
+      {/* المحتوى الرئيسي */}
+      <div className={cn(
+        "transition-all duration-300",
+        isMobile ? "w-full" : "mr-64"
+      )}>
+        <main className="p-4 md:p-6">
+          {/* زر فتح السايدبار في الجوال والهيدر */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="isPublished"
-                name="isPublished"
-                checked={formData.isPublished}
-                onChange={handleCheckboxChange}
-                className="h-4 w-4 ml-2 text-blue-600 focus:ring-blue-500 rounded"
-              />
-              <label htmlFor="isPublished" className="font-medium text-gray-700">
-                نشر القصة فوراً
-              </label>
+              {isMobile && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="ml-2" 
+                  onClick={() => setSidebarOpen(true)}
+                  aria-label="فتح القائمة"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              )}
+              <h1 className="text-xl md:text-2xl font-bold">إضافة قصة نجاح جديدة</h1>
             </div>
-            <p className="text-gray-500 text-sm mt-1 mr-6">
-              إذا لم تفعل هذا الخيار، سيتم حفظ القصة كمسودة ويمكنك نشرها لاحقاً
-            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate('/admin/success-stories')}>
+                <ArrowLeft className="ml-2 h-4 w-4" />
+                العودة
+              </Button>
+            </div>
           </div>
-        </div>
-        
-        {/* Buttons */}
-        <div className="flex justify-between">
-          <button
-            type="button"
-            onClick={() => setLocation('/admin/success-stories')}
-            className="px-4 py-2 border rounded-md bg-gray-50 text-gray-600 hover:bg-gray-100"
-          >
-            إلغاء
-          </button>
-          <button
-            type="submit"
-            className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center gap-2"
-            disabled={createMutation.isPending}
-          >
-            {createMutation.isPending ? (
-              <>
-                <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                جاري الحفظ...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                حفظ القصة
-              </>
-            )}
-          </button>
-        </div>
-      </form>
-    </AdminLayout>
+
+          {/* نموذج إضافة قصة نجاح */}
+          <div className="bg-white rounded-md shadow p-6 max-w-4xl">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {/* اسم الشخص */}
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>اسم الشخص</FormLabel>
+                      <FormControl>
+                        <Input placeholder="أدخل اسم صاحب قصة النجاح" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* عنوان القصة */}
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>عنوان القصة</FormLabel>
+                      <FormControl>
+                        <Input placeholder="أدخل عنوان قصة النجاح" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* المنحة المرتبطة */}
+                <FormField
+                  control={form.control}
+                  name="scholarshipId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>المنحة المرتبطة (اختياري)</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="اختر المنحة المرتبطة" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="">بدون منحة</SelectItem>
+                          {scholarships.map((scholarship) => (
+                            <SelectItem key={scholarship.id} value={scholarship.id.toString()}>
+                              {scholarship.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        حدد المنحة الدراسية المرتبطة بقصة النجاح إن وجدت
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* الصورة */}
+                <FormField
+                  control={form.control}
+                  name="featuredImage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>صورة صاحب القصة</FormLabel>
+                      <MediaSelector
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                      <FormDescription>
+                        اختر صورة شخصية لصاحب قصة النجاح
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* محتوى القصة */}
+                <FormField
+                  control={form.control}
+                  name="content"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>محتوى قصة النجاح</FormLabel>
+                      <FormControl>
+                        <RichEditor
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        اكتب محتوى قصة النجاح بالتفصيل
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* حالة النشر */}
+                <FormField
+                  control={form.control}
+                  name="isPublished"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">
+                          نشر القصة
+                        </FormLabel>
+                        <FormDescription>
+                          حدد ما إذا كنت تريد نشر قصة النجاح الآن أو حفظها كمسودة
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* زر الحفظ */}
+                <Button 
+                  type="submit" 
+                  className="w-full sm:w-auto"
+                  disabled={createMutation.isPending}
+                >
+                  {createMutation.isPending ? (
+                    <>
+                      <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                      جاري الحفظ...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="ml-2 h-4 w-4" />
+                      حفظ قصة النجاح
+                    </>
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </div>
+        </main>
+      </div>
+    </div>
   );
 };
 
