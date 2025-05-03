@@ -54,18 +54,23 @@ export default function AdminUsers() {
         {/* Main Content */}
         <main className={`flex-1 p-4 md:p-6 ${!isMobile ? 'mr-64' : ''}`}>
           {/* Top Navigation */}
-          <div className="flex items-center justify-between mb-6">
-            {isMobile && (
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                onClick={toggleSidebar} 
-                className="text-muted-foreground"
-              >
-                <Menu className="h-6 w-6" />
-              </Button>
-            )}
-            <h1 className="text-2xl font-bold">إدارة المستخدمين</h1>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div className="flex items-center">
+              {isMobile && (
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  onClick={toggleSidebar} 
+                  className="ml-2 text-muted-foreground"
+                >
+                  <Menu className="h-6 w-6" />
+                </Button>
+              )}
+              <h1 className="text-xl md:text-2xl font-bold">إدارة المستخدمين</h1>
+            </div>
+            <Button className="flex items-center w-full sm:w-auto shadow-soft">
+              <span className="ml-2">+</span> إضافة مستخدم جديد
+            </Button>
           </div>
           
           {/* Search & Controls */}

@@ -101,13 +101,7 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
     navigate('/admin/login');
   };
 
-  // قائمة الإجراءات السريعة
-  const quickActions = [
-    { label: 'منحة جديدة', href: '/admin/scholarships/create', icon: Plus },
-    { label: 'مقال جديد', href: '/admin/posts/create', icon: Plus },
-    { label: 'صفحة جديدة', href: '/admin/pages/create', icon: Plus },
-    { label: 'لوحة التحكم', href: '/admin', icon: LayoutDashboard },
-  ];
+  // تم إزالة قائمة الإجراءات السريعة حيث أصبحت أزرار الإضافة موجودة داخل كل صفحة
 
   return (
     <div className={`min-h-screen bg-background dark:bg-gray-900 flex text-foreground dark:text-gray-100`} dir="rtl">
