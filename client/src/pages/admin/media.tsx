@@ -1,13 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlusCircle, RefreshCw, X, Menu, Image as ImageIcon, File, Trash2, Download, Copy, CheckCircle, Filter, Grid, List, Search, UploadCloud } from 'lucide-react';
+import { PlusCircle, RefreshCw, X, Image as ImageIcon, File, Trash2, Download, Copy, CheckCircle, Filter, Grid, List, Search, UploadCloud } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +19,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import Sidebar from '@/components/admin/sidebar';
+import AdminLayout from '@/components/admin/admin-layout';
 
 // زودج سكيما للتحقق من صحة البيانات
 const mediaFileSchema = z.object({
