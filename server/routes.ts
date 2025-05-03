@@ -287,10 +287,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Scholarship routes
   app.post("/api/scholarships", isAdmin, async (req, res) => {
     try {
-      const data = insertScholarshipSchema.parse(req.body);
+      // معالجة التواريخ قبل التحقق من صحة البيانات
+      const processedBody = {
+        ...req.body,
+        startDate: req.body.startDate ? new Date(req.body.startDate) : null,
+        endDate: req.body.endDate ? new Date(req.body.endDate) : null
+      };
+      
+      const data = insertScholarshipSchema.parse(processedBody);
       const scholarship = await storage.createScholarship(data);
       res.status(201).json(scholarship);
     } catch (error) {
+      console.error("Error creating scholarship:", error);
       res.status(400).json({ message: (error as Error).message });
     }
   });
@@ -387,7 +395,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Scholarship update request body:", JSON.stringify(req.body, null, 2));
       
-      const data = insertScholarshipSchema.partial().parse(req.body);
+      // معالجة التواريخ قبل التحقق من صحة البيانات
+      const processedBody = {
+        ...req.body,
+        startDate: req.body.startDate ? new Date(req.body.startDate) : null,
+        endDate: req.body.endDate ? new Date(req.body.endDate) : null
+      };
+      
+      const data = insertScholarshipSchema.partial().parse(processedBody);
       console.log("Parsed scholarship data:", JSON.stringify(data, null, 2));
       
       const scholarship = await storage.updateScholarship(id, data);
