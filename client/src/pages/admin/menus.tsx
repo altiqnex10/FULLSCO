@@ -399,25 +399,26 @@ export default function MenusPage() {
     );
   }
 
+  const actions = (
+    <>
+      <Button variant="outline" onClick={() => refetch()}>
+        <RefreshCw className="ml-2 h-4 w-4" />
+        تحديث
+      </Button>
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogTrigger asChild>
+          <Button>
+            <PlusCircle className="ml-2 h-4 w-4" />
+            إضافة رابط
+          </Button>
+        </DialogTrigger>
+      </Dialog>
+    </>
+  );
+
   return (
-    <AdminLayout>
+    <AdminLayout title="إدارة القوائم والروابط" actions={actions}>
       <div className="p-4 md:p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div className="flex items-center">
-              <h1 className="text-xl md:text-2xl font-bold">إدارة القوائم والروابط</h1>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => refetch()}>
-                <RefreshCw className="ml-2 h-4 w-4" />
-                تحديث
-              </Button>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <PlusCircle className="ml-2 h-4 w-4" />
-                    إضافة رابط
-                  </Button>
-                </DialogTrigger>
                 <DialogContent className="sm:max-w-[500px]">
                   <DialogHeader>
                     <DialogTitle>إضافة عنصر قائمة جديد</DialogTitle>
