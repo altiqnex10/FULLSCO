@@ -37,6 +37,7 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useSiteSettings } from '@/hooks/use-site-settings';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -47,6 +48,8 @@ interface AdminLayoutProps {
 
 const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps) => {
   const { isLoading: authLoading, isAuthenticated, isAdmin, user, logout } = useAuth();
+  const { settings } = useSiteSettings();
+  const isRtl = settings?.rtlDirection ?? true; // القيمة الافتراضية هي true لأننا نستخدم نظامًا بالعربية
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
   const [, navigate] = useLocation();
@@ -70,6 +73,15 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
       document.documentElement.classList.toggle('dark', savedTheme === 'dark');
     }
   }, [authLoading, isAuthenticated, isAdmin, navigate]);
+  
+  // تطبيق إعدادات RTL على الصفحة
+  useEffect(() => {
+    if (settings) {
+      // تطبيق اتجاه RTL على العنصر الجذر
+      document.dir = isRtl ? 'rtl' : 'ltr';
+      console.log('RTL direction set to:', isRtl);
+    }
+  }, [settings, isRtl]);
 
   // تبديل وضع السمة
   const toggleTheme = () => {
@@ -104,7 +116,7 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
   // تم إزالة قائمة الإجراءات السريعة حيث أصبحت أزرار الإضافة موجودة داخل كل صفحة
 
   return (
-    <div className={`min-h-screen bg-background dark:bg-gray-900 flex text-foreground dark:text-gray-100`}>
+    <div dir={isRtl ? 'rtl' : 'ltr'} className={`min-h-screen bg-background dark:bg-gray-900 flex text-foreground dark:text-gray-100`}>
       {/* السايدبار - الإصدار الحالي */}
       <Sidebar 
         isMobileOpen={sidebarOpen} 
@@ -115,7 +127,7 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
       <main 
         className={cn(
           "flex-1 min-h-screen transition-all duration-300 flex flex-col",
-          !isMobile && (document.dir === "rtl" ? "mr-64" : "ml-64"),
+          !isMobile && (isRtl ? "mr-64" : "ml-64"),
           "w-full max-w-full" // إضافة عرض كامل للشاشة
         )}
       >
@@ -127,7 +139,7 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={document.dir === "rtl" ? "ml-2" : "mr-2"}
+                  className={isRtl ? "ml-2" : "mr-2"}
                   onClick={() => setSidebarOpen(true)}
                   aria-label="فتح القائمة"
                 >
@@ -160,7 +172,7 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align={document.dir === "rtl" ? "end" : "start"} className="w-56">
+                <DropdownMenuContent align={isRtl ? "end" : "start"} className="w-56">
                   <DropdownMenuLabel>
                     <div className="flex flex-col">
                       <span>{user && typeof user === 'object' && user.fullName ? user.fullName : 'مدير النظام'}</span>
@@ -174,20 +186,20 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
                     className="flex items-center cursor-pointer"
                     onClick={() => navigate('/admin/profile')}
                   >
-                    <User className={`${document.dir === 'rtl' ? 'ml-2' : 'mr-2'} h-4 w-4`} />
+                    <User className={`${isRtl ? 'ml-2' : 'mr-2'} h-4 w-4`} />
                     الملف الشخصي
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="flex items-center cursor-pointer"
                     onClick={() => navigate('/admin/site-settings')}
                   >
-                    <Settings className={`${document.dir === 'rtl' ? 'ml-2' : 'mr-2'} h-4 w-4`} />
+                    <Settings className={`${isRtl ? 'ml-2' : 'mr-2'} h-4 w-4`} />
                     إعدادات الموقع
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link href="/" className="flex items-center cursor-pointer">
-                      <Home className={`${document.dir === 'rtl' ? 'ml-2' : 'mr-2'} h-4 w-4`} />
+                      <Home className={`${isRtl ? 'ml-2' : 'mr-2'} h-4 w-4`} />
                       العودة للموقع
                     </Link>
                   </DropdownMenuItem>
@@ -196,7 +208,7 @@ const AdminLayout = ({ children, title, actions, breadcrumbs }: AdminLayoutProps
                     className="flex items-center text-red-500 hover:text-red-500 cursor-pointer"
                     onClick={handleLogout}
                   >
-                    <LogOut className={`${document.dir === 'rtl' ? 'ml-2' : 'mr-2'} h-4 w-4`} />
+                    <LogOut className={`${isRtl ? 'ml-2' : 'mr-2'} h-4 w-4`} />
                     تسجيل الخروج
                   </DropdownMenuItem>
                 </DropdownMenuContent>
