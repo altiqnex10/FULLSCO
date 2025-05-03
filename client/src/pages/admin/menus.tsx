@@ -7,7 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import Sidebar from '@/components/admin/sidebar';
+import AdminLayout from '@/components/admin/admin-layout';
 
 // زودج سكيما للتحقق من صحة البيانات
 const menuItemSchema = z.object({
@@ -58,8 +57,6 @@ export default function MenusPage() {
   const [activeTab, setActiveTab] = useState<'main' | 'footer' | 'mobile'>('main');
   const { isLoading: authLoading, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
-  const isMobile = useIsMobile();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // التحقق من تسجيل الدخول
   useEffect(() => {
