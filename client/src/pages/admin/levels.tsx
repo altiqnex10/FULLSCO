@@ -6,8 +6,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
-import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import Sidebar from '@/components/admin/sidebar';
+import AdminLayout from '@/components/admin/admin-layout';
 
 // زودج سكيما للتحقق من صحة البيانات
 const levelSchema = z.object({
@@ -242,293 +242,262 @@ export default function LevelsPage() {
     );
   }
 
-  return (
-    <div className="bg-background min-h-screen relative overflow-x-hidden">
-      {/* السايدبار للجوال */}
-      <Sidebar 
-        isMobileOpen={sidebarOpen} 
-        onClose={() => {
-          console.log('Levels: closing sidebar');
-          setSidebarOpen(false);
-        }} 
-      />
-      
-      {/* المحتوى الرئيسي */}
-      <div className={cn(
-        "transition-all duration-300",
-        isMobile ? "w-full" : "mr-64"
-      )}>
-        <main className="p-4 md:p-6">
-          {/* زر فتح السايدبار في الجوال والهيدر */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div className="flex items-center">
-              {isMobile && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="ml-2" 
-                  onClick={() => setSidebarOpen(true)}
-                  aria-label="فتح القائمة"
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
-              )}
-              <h1 className="text-xl md:text-2xl font-bold">إدارة المستويات الدراسية</h1>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => refetch()}>
-                <RefreshCw className="ml-2 h-4 w-4" />
-                تحديث
-              </Button>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <PlusCircle className="ml-2 h-4 w-4" />
-                    إضافة مستوى
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px]">
-                  <DialogHeader>
-                    <DialogTitle>إضافة مستوى دراسي جديد</DialogTitle>
-                    <DialogDescription>
-                      أضف مستوى دراسي جديد للمنح هنا. اضغط على حفظ عند الانتهاء.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <Form {...addForm}>
-                    <form onSubmit={addForm.handleSubmit(onSubmitAdd)} className="space-y-4">
-                      <FormField
-                        control={addForm.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>اسم المستوى</FormLabel>
-                            <FormControl>
-                              <Input {...field} onChange={handleNameChangeAdd} placeholder="مثال: دكتوراه" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={addForm.control}
-                        name="slug"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>الاسم المختصر (Slug)</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="مثال: doctorate" dir="ltr" />
-                            </FormControl>
-                            <FormDescription>
-                              سيستخدم هذا في عنوان URL. يجب أن يحتوي على أحرف صغيرة وأرقام وشرطات فقط.
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={addForm.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>الوصف</FormLabel>
-                            <FormControl>
-                              <Textarea {...field} placeholder="وصف اختياري للمستوى الدراسي" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <DialogFooter>
-                        <Button type="submit" disabled={addMutation.isPending}>
-                          {addMutation.isPending ? (
-                            <>
-                              <RefreshCw className="ml-2 h-4 w-4 animate-spin" />
-                              جاري الحفظ...
-                            </>
-                          ) : (
-                            <>
-                              <Check className="ml-2 h-4 w-4" />
-                              حفظ
-                            </>
-                          )}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-
-          <Card className="shadow-soft">
-            <CardHeader>
-              <CardTitle>قائمة المستويات الدراسية</CardTitle>
-              <CardDescription>
-                جميع المستويات الدراسية المتوفرة في الموقع
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex justify-center items-center h-32">
-                  <RefreshCw className="h-6 w-6 animate-spin" />
-                  <span className="mr-2">جاري التحميل...</span>
-                </div>
-              ) : isError ? (
-                <div className="text-center py-4 text-red-500">
-                  <p>حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى.</p>
-                  <Button variant="outline" onClick={() => refetch()} className="mt-2">
-                    إعادة المحاولة
-                  </Button>
-                </div>
-              ) : levels && levels.length > 0 ? (
-                <div className="overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-12 text-right">الرقم</TableHead>
-                        <TableHead className="text-right">الاسم</TableHead>
-                        <TableHead className="text-right">الاسم المختصر</TableHead>
-                        <TableHead className="text-right">الوصف</TableHead>
-                        <TableHead className="text-left w-[120px]">الإجراءات</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {levels.map((level) => (
-                        <TableRow key={level.id}>
-                          <TableCell>{level.id}</TableCell>
-                          <TableCell className="font-medium">{level.name}</TableCell>
-                          <TableCell dir="ltr">{level.slug}</TableCell>
-                          <TableCell>{level.description || "—"}</TableCell>
-                          <TableCell>
-                            <div className="flex justify-end gap-2">
-                              <Button size="icon" variant="ghost" onClick={() => handleEdit(level)}>
-                                <Edit className="h-4 w-4" />
-                                <span className="sr-only">تعديل</span>
-                              </Button>
-                              <Button size="icon" variant="ghost" className="text-red-500" onClick={() => handleDelete(level)}>
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">حذف</span>
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="text-center py-6 text-muted-foreground">
-                  <p>لا توجد مستويات دراسية حاليًا.</p>
-                  <Button variant="outline" onClick={() => setIsAddDialogOpen(true)} className="mt-2">
-                    إضافة مستوى دراسي جديد
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* نافذة تعديل المستوى الدراسي */}
-          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>تعديل المستوى الدراسي</DialogTitle>
-                <DialogDescription>
-                  قم بتعديل بيانات المستوى الدراسي هنا. اضغط على حفظ عند الانتهاء.
-                </DialogDescription>
-              </DialogHeader>
-              {selectedLevel && (
-                <Form {...editForm}>
-                  <form onSubmit={editForm.handleSubmit(onSubmitEdit)} className="space-y-4">
-                    <FormField
-                      control={editForm.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>اسم المستوى</FormLabel>
-                          <FormControl>
-                            <Input {...field} onChange={handleNameChangeEdit} placeholder="مثال: دكتوراه" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={editForm.control}
-                      name="slug"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>الاسم المختصر (Slug)</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="مثال: doctorate" dir="ltr" />
-                          </FormControl>
-                          <FormDescription>
-                            سيستخدم هذا في عنوان URL. يجب أن يحتوي على أحرف صغيرة وأرقام وشرطات فقط.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={editForm.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>الوصف</FormLabel>
-                          <FormControl>
-                            <Textarea {...field} placeholder="وصف اختياري للمستوى الدراسي" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <DialogFooter>
-                      <Button type="submit" disabled={updateMutation.isPending}>
-                        {updateMutation.isPending ? (
-                          <>
-                            <RefreshCw className="ml-2 h-4 w-4 animate-spin" />
-                            جاري الحفظ...
-                          </>
-                        ) : (
-                          <>
-                            <Check className="ml-2 h-4 w-4" />
-                            حفظ التغييرات
-                          </>
-                        )}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </Form>
-              )}
-            </DialogContent>
-          </Dialog>
-
-          {/* نافذة تأكيد الحذف */}
-          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-                <AlertDialogDescription>
-                  سيتم حذف المستوى الدراسي "{selectedLevel?.name}" بشكل نهائي. 
-                  هذا الإجراء لا يمكن التراجع عنه.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600">
-                  {deleteMutation.isPending ? (
+  // أزرار إجراءات صفحة المستويات الدراسية
+  const levelsActions = (
+    <div className="flex gap-2">
+      <Button variant="outline" onClick={() => refetch()}>
+        <RefreshCw className="ml-2 h-4 w-4" />
+        تحديث
+      </Button>
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogTrigger asChild>
+          <Button>
+            <PlusCircle className="ml-2 h-4 w-4" />
+            إضافة مستوى
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>إضافة مستوى دراسي جديد</DialogTitle>
+            <DialogDescription>
+              أضف مستوى دراسي جديد للمنح هنا. اضغط على حفظ عند الانتهاء.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...addForm}>
+            <form onSubmit={addForm.handleSubmit(onSubmitAdd)} className="space-y-4">
+              <FormField
+                control={addForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>اسم المستوى</FormLabel>
+                    <FormControl>
+                      <Input {...field} onChange={handleNameChangeAdd} placeholder="مثال: دكتوراه" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={addForm.control}
+                name="slug"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>الاسم المختصر (Slug)</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="مثال: doctorate" dir="ltr" />
+                    </FormControl>
+                    <FormDescription>
+                      سيستخدم هذا في عنوان URL. يجب أن يحتوي على أحرف صغيرة وأرقام وشرطات فقط.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={addForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>الوصف</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} placeholder="وصف اختياري للمستوى الدراسي" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="submit" disabled={addMutation.isPending}>
+                  {addMutation.isPending ? (
                     <>
                       <RefreshCw className="ml-2 h-4 w-4 animate-spin" />
-                      جارٍ الحذف...
+                      جاري الحفظ...
                     </>
                   ) : (
-                    'حذف'
+                    <>
+                      <Check className="ml-2 h-4 w-4" />
+                      حفظ
+                    </>
                   )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </main>
-      </div>
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+
+  return (
+    <AdminLayout title="إدارة المستويات الدراسية" actions={levelsActions}>
+      <Card className="shadow-soft">
+        <CardHeader>
+          <CardTitle>قائمة المستويات الدراسية</CardTitle>
+          <CardDescription>
+            جميع المستويات الدراسية المتوفرة في الموقع
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-32">
+              <RefreshCw className="h-6 w-6 animate-spin" />
+              <span className="mr-2">جاري التحميل...</span>
+            </div>
+          ) : isError ? (
+            <div className="text-center py-4 text-red-500">
+              <p>حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى.</p>
+              <Button variant="outline" onClick={() => refetch()} className="mt-2">
+                إعادة المحاولة
+              </Button>
+            </div>
+          ) : levels && levels.length > 0 ? (
+            <div className="overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12 text-right">الرقم</TableHead>
+                    <TableHead className="text-right">الاسم</TableHead>
+                    <TableHead className="text-right">الاسم المختصر</TableHead>
+                    <TableHead className="text-right">الوصف</TableHead>
+                    <TableHead className="text-left w-[120px]">الإجراءات</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {levels.map((level) => (
+                    <TableRow key={level.id}>
+                      <TableCell>{level.id}</TableCell>
+                      <TableCell className="font-medium">{level.name}</TableCell>
+                      <TableCell dir="ltr">{level.slug}</TableCell>
+                      <TableCell>{level.description || "—"}</TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-2">
+                          <Button size="icon" variant="ghost" onClick={() => handleEdit(level)}>
+                            <Edit className="h-4 w-4" />
+                            <span className="sr-only">تعديل</span>
+                          </Button>
+                          <Button size="icon" variant="ghost" className="text-red-500" onClick={() => handleDelete(level)}>
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">حذف</span>
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center py-6 text-muted-foreground">
+              <p>لا توجد مستويات دراسية حاليًا.</p>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(true)} className="mt-2">
+                إضافة مستوى دراسي جديد
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* نافذة تعديل المستوى الدراسي */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>تعديل المستوى الدراسي</DialogTitle>
+            <DialogDescription>
+              قم بتعديل بيانات المستوى الدراسي هنا. اضغط على حفظ عند الانتهاء.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedLevel && (
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(onSubmitEdit)} className="space-y-4">
+                <FormField
+                  control={editForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>اسم المستوى</FormLabel>
+                      <FormControl>
+                        <Input {...field} onChange={handleNameChangeEdit} placeholder="مثال: دكتوراه" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="slug"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>الاسم المختصر (Slug)</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="مثال: doctorate" dir="ltr" />
+                      </FormControl>
+                      <FormDescription>
+                        سيستخدم هذا في عنوان URL. يجب أن يحتوي على أحرف صغيرة وأرقام وشرطات فقط.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>الوصف</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} placeholder="وصف اختياري للمستوى الدراسي" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter>
+                  <Button type="submit" disabled={updateMutation.isPending}>
+                    {updateMutation.isPending ? (
+                      <>
+                        <RefreshCw className="ml-2 h-4 w-4 animate-spin" />
+                        جاري الحفظ...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="ml-2 h-4 w-4" />
+                        حفظ التغييرات
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* نافذة تأكيد الحذف */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم حذف المستوى الدراسي "{selectedLevel?.name}" بشكل نهائي. 
+              هذا الإجراء لا يمكن التراجع عنه.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600">
+              {deleteMutation.isPending ? (
+                <>
+                  <RefreshCw className="ml-2 h-4 w-4 animate-spin" />
+                  جارٍ الحذف...
+                </>
+              ) : (
+                'حذف'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </AdminLayout>
   );
 }
