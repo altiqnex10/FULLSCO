@@ -193,6 +193,8 @@ const Header = () => {
                   type="text" 
                   placeholder="ابحث عن المنح..." 
                   className="h-10 w-64 rounded-full bg-muted/70 px-4 py-2 pl-10 pr-4 text-sm shadow-soft transition-all focus-visible:bg-white focus-visible:shadow-md focus-visible:ring-accent" 
+                  onChange={(e) => e.preventDefault()} 
+                  defaultValue="" 
                 />
                 <div className="absolute inset-y-0 left-3 flex items-center">
                   <Search className="h-4 w-4 text-muted-foreground" />
@@ -256,6 +258,8 @@ const Header = () => {
                 type="text" 
                 placeholder="ابحث عن المنح..." 
                 className="h-10 w-full rounded-full bg-muted/70 px-4 py-2 pl-10 pr-4 text-sm focus-visible:bg-white focus-visible:ring-accent" 
+                onChange={(e) => e.preventDefault()} 
+                defaultValue=""
               />
               <div className="absolute inset-y-0 left-3 flex items-center">
                 <Search className="h-4 w-4 text-muted-foreground" />
