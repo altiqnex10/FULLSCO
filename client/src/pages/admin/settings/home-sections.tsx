@@ -160,18 +160,39 @@ const HomeSectionsSettings = () => {
     setIsSaving(true);
 
     try {
-      await updateSettings(data);
+      // طباعة البيانات التي سيتم إرسالها للتأكد من صحتها
+      console.log('Form data to be submitted:', data);
+      
+      // إضافة id للبيانات حتى يعرف API أي سجل يتم تحديثه
+      const dataToSend = {
+        ...data,
+        id: siteSettings?.id || 1 // استخدام معرف الإعدادات الحالية أو 1 كافتراضي
+      };
+      
+      await updateSettings(dataToSend);
+      
       toast({
         title: "تم حفظ الإعدادات",
         description: "تم تحديث إعدادات أقسام الصفحة الرئيسية بنجاح",
       });
+      
+      // تحديث البيانات بعد الحفظ
       await refetch();
     } catch (error) {
       console.error("Error saving settings:", error);
+      
+      // رسالة خطأ أكثر تفصيلًا
+      let errorMessage = "حدث خطأ أثناء محاولة حفظ الإعدادات";
+      
+      // إذا كان الخطأ له رسالة، أضفها للوصف
+      if (error instanceof Error) {
+        errorMessage += ": " + error.message;
+      }
+      
       toast({
         variant: "destructive",
         title: "خطأ في حفظ الإعدادات",
-        description: "حدث خطأ أثناء محاولة حفظ الإعدادات، يرجى المحاولة مرة أخرى",
+        description: errorMessage,
       });
     } finally {
       setIsSaving(false);

@@ -76,6 +76,7 @@ export const SiteSettingsProvider: React.FC<{children: React.ReactNode}> = ({ ch
   // وظيفة لتحديث إعدادات الموقع
   const updateSettings = async (data: Partial<SiteSettings>) => {
     try {
+      console.log('Updating settings with data:', data);
       const response = await fetch('/api/site-settings', {
         method: 'PATCH',
         headers: {
@@ -85,13 +86,17 @@ export const SiteSettingsProvider: React.FC<{children: React.ReactNode}> = ({ ch
       });
       
       if (!response.ok) {
-        throw new Error('فشل في تحديث إعدادات الموقع');
+        const errorText = await response.text();
+        console.error(`Server responded with status ${response.status}: ${errorText}`);
+        throw new Error(`فشل في تحديث إعدادات الموقع: ${response.status} ${errorText}`);
       }
       
       const updatedSettings = await response.json();
+      console.log('Successfully updated settings:', updatedSettings);
       return updatedSettings;
     } catch (error) {
       console.error('Error updating site settings:', error);
+      // تحديد نوع الخطأ بشكل أفضل للعرض للمستخدم
       throw error;
     }
   };
