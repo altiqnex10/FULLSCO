@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, and, desc, sql, inArray, like } from "drizzle-orm";
 import {
   users, User, InsertUser,
@@ -992,14 +992,16 @@ export class DatabaseStorage implements IStorage {
           
           // استخدام أسلوب تحديث صريح
           // السبب في المشكلة: يجب استخدام الطريقة الصحيحة للتحديث في drizzle
-          await pool.query(
-            `UPDATE site_settings SET 
-            ${Object.entries(validDbSettings)
-              .map(([key, value]) => `${key} = $${Object.keys(validDbSettings).indexOf(key) + 1}`)
-              .join(', ')} 
-            WHERE id = ${existingSettings.id}`,
-            Object.values(validDbSettings)
-          );
+          // Usar db.execute en lugar de pool.query para SQL personalizado
+          await db.execute(sql`
+            UPDATE site_settings SET 
+            ${sql.raw(
+              Object.entries(validDbSettings)
+                .map(([key]) => `${key} = ?`)
+                .join(', ')
+            )}
+            WHERE id = ${existingSettings.id}
+          `, Object.values(validDbSettings));
           
           console.log("DB storage: site settings updated successfully");
         } else {
