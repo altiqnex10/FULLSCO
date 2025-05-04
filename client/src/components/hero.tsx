@@ -15,8 +15,8 @@ interface HeroProps {
 }
 
 const Hero = ({ 
-  title = "اكتشف المنح الدراسية المثالية لمستقبلك",
-  description = "آلاف المنح الدراسية حول العالم في مكان واحد، مع إرشادات للتقديم الناجح وتحقيق أهدافك الأكاديمية"
+  title, // تحديد القيمة من الخارج عن طريق البروبس
+  description
 }: HeroProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [, navigate] = useLocation();

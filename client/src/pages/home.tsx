@@ -85,13 +85,26 @@ const Home = () => {
     );
   }
 
-  // للتأكد من تفعيل جميع الأقسام إذا لم تكن محددة في الإعدادات
-  const showHero = siteSettings.showHeroSection !== false;
-  const showFeatured = siteSettings.showFeaturedScholarships !== false;
-  const showCategories = siteSettings.showCategoriesSection !== false;
-  const showLatestArticles = siteSettings.showLatestArticles !== false;
-  const showSuccessStories = siteSettings.showSuccessStories !== false;
-  const showNewsletter = siteSettings.showNewsletterSection !== false && siteSettings.enableNewsletter !== false;
+  // لإظهار البيانات الحقيقية من الإعدادات وقيمها ونوعها
+  console.log('Complete site settings object:', siteSettings);
+  console.log('showHeroSection value:', siteSettings.showHeroSection, 'type:', typeof siteSettings.showHeroSection);
+  console.log('showFeaturedScholarships value:', siteSettings.showFeaturedScholarships, 'type:', typeof siteSettings.showFeaturedScholarships);
+  console.log('heroTitle value:', siteSettings.heroTitle, 'type:', typeof siteSettings.heroTitle);
+  console.log('heroDescription value:', siteSettings.heroDescription, 'type:', typeof siteSettings.heroDescription);
+
+  // التحقق من قيم العرض في الإعدادات برقة أكبر
+  // استخدام دالة مساعدة للتحقق من القيم البوليانية بشكل صحيح
+  const isTrueValue = (value: any): boolean => {
+    // التحقق من القيم المختلفة التي يمكن أن تأتي من قاعدة البيانات
+    return value === true || value === 't' || value === 'true' || value === 1;
+  };
+  
+  const showHero = isTrueValue(siteSettings.showHeroSection);
+  const showFeatured = isTrueValue(siteSettings.showFeaturedScholarships);
+  const showCategories = isTrueValue(siteSettings.showCategoriesSection);
+  const showLatestArticles = isTrueValue(siteSettings.showLatestArticles);
+  const showSuccessStories = isTrueValue(siteSettings.showSuccessStories);
+  const showNewsletter = isTrueValue(siteSettings.showNewsletterSection) && isTrueValue(siteSettings.enableNewsletter);
 
   console.log('Display decisions:', { showHero, showFeatured, showCategories, showLatestArticles, showSuccessStories, showNewsletter });
 
@@ -100,8 +113,8 @@ const Home = () => {
       {/* عرض كل مكون مع التحقق من وجود الإعداد وقيمته */}
       {showHero && (
         <Hero 
-          title={siteSettings.heroTitle || "اكتشف المنح الدراسية المثالية لمستقبلك"} 
-          description={siteSettings.heroDescription || "آلاف المنح الدراسية حول العالم في مكان واحد، مع إرشادات للتقديم الناجح وتحقيق أهدافك الأكاديمية"} 
+          title={siteSettings.heroTitle || "ابحث عن المنح الدراسية المناسبة لك"} 
+          description={siteSettings.heroDescription || "أكبر قاعدة بيانات للمنح الدراسية حول العالم"} 
         />
       )}
       
