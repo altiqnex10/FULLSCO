@@ -412,58 +412,57 @@ export default function AdminSettings() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+            <Tabs
+              defaultValue="general"
+              value={activeTab}
+              onValueChange={setActiveTab}
+              orientation="horizontal"
+              className="w-full flex flex-col md:flex-row"
+            >
               {/* القوائم اليمنى */}
-              <div className="md:col-span-3">
+              <div className="md:col-span-3 w-full md:w-1/4 md:pr-4">
                 <Card className="sticky top-6">
                   <CardContent className="p-0">
-                    <Tabs
-                      defaultValue="general"
-                      value={activeTab}
-                      onValueChange={setActiveTab}
-                      orientation="vertical"
-                      className="w-full"
-                    >
-                      <TabsList className="flex flex-col h-full w-full space-y-1 rounded-r-none p-2">
-                        <TabsTrigger value="general" className="justify-start">
-                          <Globe className="ml-2 h-4 w-4" />
-                          إعدادات عامة
-                        </TabsTrigger>
-                        <TabsTrigger value="appearance" className="justify-start">
-                          <Palette className="ml-2 h-4 w-4" />
-                          المظهر والألوان
-                        </TabsTrigger>
-                        <TabsTrigger value="contact" className="justify-start">
-                          <Mail className="ml-2 h-4 w-4" />
-                          معلومات الاتصال
-                        </TabsTrigger>
-                        <TabsTrigger value="social" className="justify-start">
-                          <Share className="ml-2 h-4 w-4" />
-                          وسائل التواصل
-                        </TabsTrigger>
-                        <TabsTrigger value="homepage" className="justify-start">
-                          <LayoutGrid className="ml-2 h-4 w-4" />
-                          الصفحة الرئيسية
-                        </TabsTrigger>
-                        <TabsTrigger value="sections" className="justify-start">
-                          <Layout className="ml-2 h-4 w-4" />
-                          عناوين الأقسام
-                        </TabsTrigger>
-                        <TabsTrigger value="notifications" className="justify-start">
-                          <BellRing className="ml-2 h-4 w-4" />
-                          الإشعارات
-                        </TabsTrigger>
-                        <TabsTrigger value="advanced" className="justify-start">
-                          <Type className="ml-2 h-4 w-4" />
-                          إعدادات متقدمة
-                        </TabsTrigger>
-                      </TabsList>
-                    </Tabs>
+                    <TabsList className="flex flex-col h-full w-full space-y-1 rounded-r-none p-2">
+                      <TabsTrigger value="general" className="justify-start">
+                        <Globe className="ml-2 h-4 w-4" />
+                        إعدادات عامة
+                      </TabsTrigger>
+                      <TabsTrigger value="appearance" className="justify-start">
+                        <Palette className="ml-2 h-4 w-4" />
+                        المظهر والألوان
+                      </TabsTrigger>
+                      <TabsTrigger value="contact" className="justify-start">
+                        <Mail className="ml-2 h-4 w-4" />
+                        معلومات الاتصال
+                      </TabsTrigger>
+                      <TabsTrigger value="social" className="justify-start">
+                        <Share className="ml-2 h-4 w-4" />
+                        وسائل التواصل
+                      </TabsTrigger>
+                      <TabsTrigger value="homepage" className="justify-start">
+                        <LayoutGrid className="ml-2 h-4 w-4" />
+                        الصفحة الرئيسية
+                      </TabsTrigger>
+                      <TabsTrigger value="sections" className="justify-start">
+                        <Layout className="ml-2 h-4 w-4" />
+                        عناوين الأقسام
+                      </TabsTrigger>
+                      <TabsTrigger value="notifications" className="justify-start">
+                        <BellRing className="ml-2 h-4 w-4" />
+                        الإشعارات
+                      </TabsTrigger>
+                      <TabsTrigger value="advanced" className="justify-start">
+                        <Type className="ml-2 h-4 w-4" />
+                        إعدادات متقدمة
+                      </TabsTrigger>
+                    </TabsList>
                   </CardContent>
                 </Card>
               </div>
               
               {/* المحتوى الرئيسي */}
-              <div className="md:col-span-9">
+              <div className="md:col-span-9 w-full md:w-3/4">
                 <TabsContent value="general" className="mt-0">
                   <Card className="mb-6">
                     <CardHeader>
@@ -1503,6 +1502,7 @@ export default function AdminSettings() {
                   </Card>
                 </TabsContent>
               </div>
+             </Tabs>
             </div>
           </form>
         </Form>
