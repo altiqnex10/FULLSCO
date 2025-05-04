@@ -39,8 +39,18 @@ export const DynamicMenu = ({
   const [location1] = useLocation();
   const { data: pages } = usePages();
 
+  // تعريف نوع لهيكل القائمة مع index signature للسماح بالوصول الديناميكي
+  type IndexableMenuStructure = {
+    id: number;
+    name: string;
+    slug: string;
+    location: string;
+    items: MenuItem[];
+    [key: string]: any; // إضافة index signature للسماح بالوصول باستخدام السلاسل النصية
+  };
+
   // قيم افتراضية للبيانات لتجنب مشكلة التبديل بين uncontrolled/controlled
-  const defaultMenuStructure = {
+  const defaultMenuStructure: IndexableMenuStructure = {
     id: 0,
     name: location,
     slug: location,
@@ -93,23 +103,26 @@ export const DynamicMenu = ({
   // طباعة هيكل القائمة للتشخيص
   console.log(`Menu structure for ${location}:`, finalMenuStructure);
   
+  // تحويل هيكل القائمة إلى النوع القابل للفهرسة لمنع أخطاء TypeScript
+  const indexableMenu = finalMenuStructure as IndexableMenuStructure;
+
   // تحقق من هيكل البيانات المستلمة
-  // هناك احتمالان: إما أن تكون العناصر مباشرة في finalMenuStructure.items
-  // أو أن تكون تحت اسم الموقع مثل finalMenuStructure.header.items أو finalMenuStructure.footer.items
-  let menuItems;
+  // هناك احتمالان: إما أن تكون العناصر مباشرة في indexableMenu.items
+  // أو أن تكون تحت اسم الموقع مثل indexableMenu.header.items أو indexableMenu.footer.items
+  let menuItems: MenuItem[] = [];
   
-  if (finalMenuStructure.items) {
-    menuItems = finalMenuStructure.items;
-  } else if (finalMenuStructure[location] && finalMenuStructure[location].items) {
-    menuItems = finalMenuStructure[location].items;
+  if (indexableMenu.items) {
+    menuItems = indexableMenu.items;
+  } else if (indexableMenu[location] && indexableMenu[location].items) {
+    menuItems = indexableMenu[location].items;
   } else {
     // محاولة البحث عن العناصر في المفاتيح الأخرى
-    const firstKey = Object.keys(finalMenuStructure).find(key => 
-      finalMenuStructure[key] && typeof finalMenuStructure[key] === 'object' && finalMenuStructure[key].items);
+    const firstKey = Object.keys(indexableMenu).find(key => 
+      indexableMenu[key] && typeof indexableMenu[key] === 'object' && indexableMenu[key].items);
     
-    if (firstKey && finalMenuStructure[firstKey].items) {
+    if (firstKey && indexableMenu[firstKey].items) {
       console.log(`Found items in the key: ${firstKey}`);
-      menuItems = finalMenuStructure[firstKey].items;
+      menuItems = indexableMenu[firstKey].items;
     } else {
       console.error(`Menu items for ${location} are undefined`);
       // نعود إلى مصفوفة فارغة بدلاً من إظهار خطأ للمستخدم
