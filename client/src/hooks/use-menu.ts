@@ -65,17 +65,15 @@ export function useMenuByLocation(location: 'header' | 'footer' | 'sidebar' | 'm
 }
 
 export function useMenuStructure(location: 'header' | 'footer' | 'sidebar' | 'mobile') {
+  // استخدام تخزين مؤقت لمنع إعادة التحميل غير الضرورية
   return useQuery<MenuStructure>({
     queryKey: ['/api/menu-structure', location],
     queryFn: async () => {
       // استخدام نقطة نهاية محددة لكل موقع
       console.log(`Fetching menu structure for ${location}`);
       
-      // إضافة معامل عشوائي لمنع التخزين المؤقت في المتصفح
-      const cacheBuster = new Date().getTime();
-      
       // استخدام النقطة النهائية المخصصة لكل موقع حيث location هي معلمة مسار
-      const response = await fetch(`/api/menu-structure/${location}?_=${cacheBuster}`);
+      const response = await fetch(`/api/menu-structure/${location}`);
       if (!response.ok) {
         throw new Error(`Error fetching menu structure for ${location}`);
       }
@@ -83,9 +81,10 @@ export function useMenuStructure(location: 'header' | 'footer' | 'sidebar' | 'mo
       console.log(`Menu structure for ${location}:`, data);
       return data;
     },
-    refetchOnWindowFocus: true,  // إعادة تحميل البيانات عند التركيز على النافذة
-    refetchInterval: 3000,  // إعادة تحميل البيانات كل 3 ثواني
+    refetchOnWindowFocus: false, // تجنب إعادة التحميل عند التركيز
+    staleTime: 300000, // البيانات تبقى صالحة لمدة 5 دقائق (300000 مللي ثانية)
     retry: 3, // محاولة إعادة الطلب 3 مرات في حالة الفشل
+    // إزالة إعادة التحميل الدوري لمنع مشكلة التبديل بين uncontrolled/controlled
   });
 }
 
