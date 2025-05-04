@@ -116,9 +116,7 @@ const siteSettingsSchema = z.object({
   partnersSectionDescription: z.string().optional(),
   
   // خيارات تخطيط الصفحات
-  homePageLayout: z.string().default('default'),
-  scholarshipPageLayout: z.string().default('default'),
-  articlePageLayout: z.string().default('default'),
+  // تم حذف متغيرات تخطيطات الصفحات
   customCss: z.string().optional(),
 });
 
@@ -184,19 +182,11 @@ interface SiteSetting {
   partnersSectionTitle?: string;
   partnersSectionDescription?: string;
   
-  // خيارات تخطيط الصفحات
-  homePageLayout?: string;
-  scholarshipPageLayout?: string;
-  articlePageLayout?: string;
+  // تم حذف خيارات تخطيط الصفحات
   customCss?: string;
 }
 
-// قائمة تخطيطات الصفحة الرئيسية
-const pageLayouts = [
-  { value: 'default', label: 'التخطيط الافتراضي' },
-  { value: 'modern', label: 'التخطيط الحديث' },
-  { value: 'minimal', label: 'التخطيط البسيط' },
-];
+// تم حذف قائمة تخطيطات الصفحات
 
 const languageOptions = [
   { value: 'ar', label: 'العربية' },
@@ -254,9 +244,7 @@ export default function AdminSettings() {
       showNewsletterSection: true,
       showStatisticsSection: true,
       showPartnersSection: true,
-      homePageLayout: 'default',
-      scholarshipPageLayout: 'default',
-      articlePageLayout: 'default',
+      // تم حذف متغيرات تخطيطات الصفحات
     },
   });
 
@@ -322,10 +310,7 @@ export default function AdminSettings() {
         partnersSectionTitle: siteSettings.partnersSectionTitle || '',
         partnersSectionDescription: siteSettings.partnersSectionDescription || '',
         
-        // خيارات تخطيط الصفحات
-        homePageLayout: siteSettings.homePageLayout || 'default',
-        scholarshipPageLayout: siteSettings.scholarshipPageLayout || 'default',
-        articlePageLayout: siteSettings.articlePageLayout || 'default',
+        // تم حذف خيارات تخطيط الصفحات
         customCss: siteSettings.customCss || '',
       };
 
@@ -1088,87 +1073,7 @@ export default function AdminSettings() {
                         />
                       </div>
                       
-                      <Separator />
-                      
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-medium">تخطيطات الصفحات</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="homePageLayout"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>تخطيط الصفحة الرئيسية</FormLabel>
-                                <div className="relative">
-                                  <select
-                                    className="w-full h-10 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"                
-                                    value={field.value}
-                                    onChange={(e) => field.onChange(e.target.value)}
-                                  >
-                                    {pageLayouts.map((layout) => (
-                                      <option key={layout.value} value={layout.value}>
-                                        {layout.label}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                                <FormDescription>تخطيط عرض الصفحة الرئيسية</FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="scholarshipPageLayout"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>تخطيط صفحة المنح</FormLabel>
-                                <div className="relative">
-                                  <select
-                                    className="w-full h-10 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"                
-                                    value={field.value}
-                                    onChange={(e) => field.onChange(e.target.value)}
-                                  >
-                                    {pageLayouts.map((layout) => (
-                                      <option key={layout.value} value={layout.value}>
-                                        {layout.label}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                                <FormDescription>تخطيط عرض صفحة المنح الدراسية</FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="articlePageLayout"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>تخطيط صفحة المقالات</FormLabel>
-                                <div className="relative">
-                                  <select
-                                    className="w-full h-10 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"                
-                                    value={field.value}
-                                    onChange={(e) => field.onChange(e.target.value)}
-                                  >
-                                    {pageLayouts.map((layout) => (
-                                      <option key={layout.value} value={layout.value}>
-                                        {layout.label}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                                <FormDescription>تخطيط عرض صفحة المقالات</FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </div>
+                      {/* تم حذف قسم تخطيطات الصفحات */}
                     </CardContent>
                   </Card>
                 </TabsContent>
