@@ -107,12 +107,14 @@ const navItems: NavItem[] = [
   },
   
   { 
-    label: 'تخصيص الموقع',
-    icon: Palette,
+    label: 'إعدادات الموقع',
+    icon: Settings,
     items: [
-      { href: '/admin/site-settings', label: 'الإعدادات العامة', icon: Settings },
-      { href: '/admin/appearance', label: 'المظهر والألوان', icon: LayoutGrid },
-      { href: '/admin/home-layout', label: 'تخصيص الرئيسية', icon: PanelLeft },
+      { href: '/admin/settings/general', label: 'الإعدادات العامة', icon: Settings },
+      { href: '/admin/settings/appearance', label: 'المظهر والألوان', icon: Palette },
+      { href: '/admin/settings/home-sections', label: 'أقسام الصفحة الرئيسية', icon: LayoutGrid },
+      { href: '/admin/settings/contact', label: 'معلومات الاتصال', icon: MessageSquare },
+      { href: '/admin/settings/social', label: 'الشبكات الاجتماعية', icon: Globe },
     ]
   },
   
@@ -131,7 +133,7 @@ const navItems: NavItem[] = [
 const pinnedItems: NavItem[] = [
   { href: '/admin/scholarships/create', label: 'إضافة منحة', icon: GraduationCap },
   { href: '/admin/posts/create', label: 'إضافة مقال', icon: FileText },
-  { href: '/admin/site-settings', label: 'الإعدادات', icon: Settings },
+  { href: '/admin/settings/general', label: 'الإعدادات', icon: Settings },
 ];
 
 interface SidebarProps {
