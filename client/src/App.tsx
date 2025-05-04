@@ -27,6 +27,7 @@ import AdminLevels from "@/pages/admin/levels";
 import AdminCountries from "@/pages/admin/countries";
 import AdminSiteSettings from "@/pages/admin/site-settings"; // نستخدم واجهة واحدة فقط لإعدادات الموقع
 import AdminPages from "@/pages/admin/pages";
+import HomeSectionsSettings from "@/pages/admin/settings/home-sections";
 
 import AdminMenus from "@/pages/admin/menus-new";
 import AdminMedia from "@/pages/admin/media";
@@ -164,13 +165,7 @@ function App() {
                     <Route path="/admin/posts/edit/:id" component={CreatePost} />
                     <Route path="/admin/users" component={AdminUsers} />
                     <Route path="/admin/settings" component={AdminSettings} />
-                    <Route path="/admin/settings/home-sections">
-                      {() => (
-                        <Suspense fallback={<div className="flex justify-center items-center min-h-[60vh]">جاري التحميل...</div>}>
-                          {lazy(() => import("@/pages/admin/settings/home-sections"))}
-                        </Suspense>
-                      )}
-                    </Route>
+                    <Route path="/admin/settings/home-sections" component={HomeSectionsSettings} />
                     <Route path="/admin/site-settings" component={AdminSiteSettings} />
                     <Route path="/admin/pages" component={AdminPages} />
                     <Route path="/admin/pages/create" component={CreatePage} />
