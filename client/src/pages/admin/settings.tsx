@@ -424,13 +424,20 @@ export default function AdminSettings() {
   const onSubmit = (data: SiteSettingsFormValues) => {
     // إضافة سجلات لمراقبة البيانات المرسلة
     console.log('Submitting form data:', data);
-    console.log('Featured scholarships value being submitted:', data.showFeaturedScholarships, typeof data.showFeaturedScholarships);
+    console.log('Featured scholarships value before switch:', data.showFeaturedScholarships, typeof data.showFeaturedScholarships);
+    
+    // تعامل خاص مع حقل إظهار المنح المميزة
+    // قم بتحويل القيمة إلى النوع المطلوب وأكد أنها بوليانية
+    const userWantsFeaturedScholarshipsVisible = data.showFeaturedScholarships === true;
+    
+    console.log('User specifically wants featured scholarships to be:', userWantsFeaturedScholarshipsVisible);
     
     // التأكد من أن القيم البوليانية هي بوليان بالفعل وليست سلاسل نصية
     const sanitizedData = {
       ...data,
       showHeroSection: Boolean(data.showHeroSection),
-      showFeaturedScholarships: Boolean(data.showFeaturedScholarships),
+      // نستخدم القيمة المحددة مسبقًا بدلاً من Boolean()
+      showFeaturedScholarships: userWantsFeaturedScholarshipsVisible,
       showSearchSection: Boolean(data.showSearchSection),
       showCategoriesSection: Boolean(data.showCategoriesSection),
       showCountriesSection: Boolean(data.showCountriesSection),
