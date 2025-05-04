@@ -962,16 +962,61 @@ export class DatabaseStorage implements IStorage {
       
       console.log("DB storage: settings converted to snake_case:", JSON.stringify(dbSettings, null, 2));
       
-      if (existingSettings) {
-        console.log("DB storage: updating existing settings with ID:", existingSettings.id);
-        // Use drizzle's update method
-        await db.update(siteSettings)
-          .set(dbSettings)
-          .where(eq(siteSettings.id, existingSettings.id));
-      } else {
-        console.log("DB storage: inserting new settings");
-        // Use drizzle's insert method
-        await db.insert(siteSettings).values(dbSettings);
+      try {
+        if (existingSettings) {
+          console.log("DB storage: updating existing settings with ID:", existingSettings.id);
+          // استخدام طريقة تحديث أكثر وضوحاً مع drizzle
+          // نظيف إشارة SQL بشكل صريح لمنع اختلافات أسماء الأعمدة
+          // ونستخدم درزل بشكل أكثر صراحة في التعامل مع القيم البوليانية
+          
+          // إنشاء جزء SET من استعلام التحديث بشكل ديناميكي وأكثر وضوحاً
+          // عدم استخدام .set بالكامل لأن هناك احتمال أن تكون بعض الحقول غير موجودة في الجدول
+          console.log("DB storage: cleaning up dbSettings before update");
+          
+          // حذف الخصائص التي ليست جزءًا من الجدول لتجنب أخطاء SQL
+          const knownColumns = [
+            'site_name', 'site_tagline', 'site_description', 'favicon', 'logo', 'logo_dark',
+            'email', 'phone', 'whatsapp', 'address', 'facebook', 'twitter', 'instagram',
+            'youtube', 'linkedin', 'primary_color', 'secondary_color', 'accent_color',
+            'enable_dark_mode', 'rtl_direction', 'default_language', 'enable_newsletter',
+            'enable_scholarship_search', 'footer_text', 'show_hero_section',
+            'show_featured_scholarships', 'show_search_section', 'show_categories_section',
+            'show_countries_section', 'show_latest_articles', 'show_success_stories',
+            'show_newsletter_section', 'show_statistics_section', 'show_partners_section',
+            'hero_title', 'hero_subtitle', 'hero_description', 'featured_scholarships_title',
+            'featured_scholarships_description', 'categories_section_title',
+            'categories_section_description', 'countries_section_title',
+            'countries_section_description', 'latest_articles_title',
+            'latest_articles_description', 'success_stories_title',
+            'success_stories_description', 'newsletter_section_title',
+            'newsletter_section_description', 'statistics_section_title',
+            'statistics_section_description', 'partners_section_title',
+            'partners_section_description', 'home_page_layout',
+            'scholarship_page_layout', 'article_page_layout', 'custom_css'
+          ];
+          
+          const validDbSettings: Record<string, any> = {};
+          for (const key of Object.keys(dbSettings)) {
+            if (knownColumns.includes(key)) {
+              validDbSettings[key] = dbSettings[key];
+            }
+          }
+          
+          // استخدام أسلوب تحديث صريح
+          await db.update(siteSettings)
+            .set(validDbSettings)
+            .where(eq(siteSettings.id, existingSettings.id));
+          
+          console.log("DB storage: site settings updated successfully");
+        } else {
+          console.log("DB storage: inserting new settings");
+          // Use drizzle's insert method
+          await db.insert(siteSettings).values(dbSettings);
+          console.log("DB storage: site settings inserted successfully");
+        }
+      } catch (error) {
+        console.error("DB storage: error in SQL operation:", error);
+        throw error;
       }
       
       // Fetch the updated settings
