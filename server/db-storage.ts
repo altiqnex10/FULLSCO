@@ -910,6 +910,11 @@ export class DatabaseStorage implements IStorage {
           console.log(`Final boolean value for ${key}: ${cleanedSettings[key]}, type: ${typeof cleanedSettings[key]}`);
         }
       });
+
+      // طباعة قيمة حقل showFeaturedScholarships للتحقق منه تحديداً
+      if ('showFeaturedScholarships' in cleanedSettings) {
+        console.log(`Special check for showFeaturedScholarships: ${cleanedSettings.showFeaturedScholarships}`);
+      }
       
       console.log("DB storage: cleaned settings:", JSON.stringify(cleanedSettings, null, 2));
       
