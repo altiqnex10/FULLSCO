@@ -10,39 +10,72 @@ const ThemeColors: React.FC = () => {
   useEffect(() => {
     if (!siteSettings) return;
 
-    // تطبيق الألوان من إعدادات الموقع
-    if (siteSettings.primaryColor) {
-      console.log('Setting primary color from site settings:', siteSettings.primaryColor);
-      document.documentElement.style.setProperty('--primary-color', siteSettings.primaryColor);
-      
-      // تحويل من هيكس إلى HSL
-      const hsl = hexToHSL(siteSettings.primaryColor);
-      if (hsl) {
-        document.documentElement.style.setProperty('--primary', hsl);
-      }
+    // الهدف: إنشاء عنصر style لتطبيق الألوان مباشرة
+    const primaryColor = siteSettings.primaryColor || '#3b82f6';
+    const secondaryColor = siteSettings.secondaryColor || '#f59e0b';
+    const accentColor = siteSettings.accentColor || '#a855f7';
+
+    console.log('Applying theme colors directly:', {
+      primaryColor,
+      secondaryColor,
+      accentColor
+    });
+
+    // إنشاء متغيرات CSS باستخدام عنصر style
+    const primaryHsl = hexToHSL(primaryColor);
+    const secondaryHsl = hexToHSL(secondaryColor);
+    const accentHsl = hexToHSL(accentColor);
+
+    // إنشاء أو تحديث عنصر style
+    let styleElement = document.getElementById('theme-colors-style');
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = 'theme-colors-style';
+      document.head.appendChild(styleElement);
     }
 
-    if (siteSettings.secondaryColor) {
-      console.log('Setting secondary color from site settings:', siteSettings.secondaryColor);
-      document.documentElement.style.setProperty('--secondary-color', siteSettings.secondaryColor);
-      
-      // تحويل من هيكس إلى HSL
-      const hsl = hexToHSL(siteSettings.secondaryColor);
-      if (hsl) {
-        document.documentElement.style.setProperty('--accent', hsl);
+    // تعيين محتوى CSS مباشرة
+    styleElement.textContent = `
+      :root {
+        --primary: ${primaryHsl || '221 83% 53%'};
+        --accent: ${secondaryHsl || '25 95% 53%'};
+        --info: ${accentHsl || '262 83% 58%'};
+        
+        --primary-hex: ${primaryColor};
+        --secondary-hex: ${secondaryColor};
+        --accent-hex: ${accentColor};
       }
-    }
+      
+      /* تحسينات للألوان */
+      .btn-primary, .bg-primary {
+        background-color: ${primaryColor} !important;
+      }
+      
+      .btn-secondary, .bg-secondary {
+        background-color: ${secondaryColor} !important;
+      }
+      
+      .btn-accent, .bg-accent {
+        background-color: ${accentColor} !important;
+      }
+      
+      .text-primary {
+        color: ${primaryColor} !important;
+      }
+      
+      .text-secondary {
+        color: ${secondaryColor} !important;
+      }
+      
+      .text-accent {
+        color: ${accentColor} !important;
+      }
+      
+      .border-primary {
+        border-color: ${primaryColor} !important;
+      }
+    `;
 
-    if (siteSettings.accentColor) {
-      console.log('Setting accent color from site settings:', siteSettings.accentColor);
-      document.documentElement.style.setProperty('--accent-color', siteSettings.accentColor);
-      
-      // تحويل من هيكس إلى HSL
-      const hsl = hexToHSL(siteSettings.accentColor);
-      if (hsl) {
-        document.documentElement.style.setProperty('--info', hsl);
-      }
-    }
   }, [siteSettings]);
 
   return null; // هذا المكون لا يعرض أي شيء في DOM
