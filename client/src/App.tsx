@@ -56,6 +56,7 @@ import TempPage from "@/pages/admin/temp";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { useEffect } from "react";
+import ThemeColors from "./components/theme-colors";
 import { NotificationProvider } from "@/components/notifications/notification-provider";
 import { SiteSettingsProvider } from "@/hooks/use-site-settings";
 import { ScholarshipsProvider } from "@/hooks/use-scholarships";
@@ -109,6 +110,8 @@ function App() {
           <SuccessStoriesProvider>
             <FilterOptionsProvider>
               <TooltipProvider>
+                {/* مكون لتطبيق ألوان إعدادات الموقع */}
+                <ThemeColors />
                 {!isAdminPage && <Header />}
                 {wrapInNotificationProvider(
                   <Switch>
