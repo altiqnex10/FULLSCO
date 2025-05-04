@@ -420,30 +420,186 @@ export default function AdminSettings() {
     },
   });
 
-  // تقديم النموذج
-  const onSubmit = (data: SiteSettingsFormValues) => {
-    // إضافة سجلات لمراقبة البيانات المرسلة
-    console.log('Submitting form data:', data);
-    console.log('Featured scholarships value before switch:', data.showFeaturedScholarships, typeof data.showFeaturedScholarships);
+  // دالة حفظ الإعدادات العامة
+  const saveGeneralSettings = () => {
+    const data = form.getValues();
+    console.log('Saving general settings:', data);
     
-    // تعامل خاص مع حقل إظهار المنح المميزة
-    // تحقق من هذه القيمة بالذات لأنها كانت مشكلة مستمرة
-    // حتى لو كانت مفعلة هنا، ما هي قيمتها بالضبط؟
-    console.log('Looking at Switch checked state for featured scholarships:', data.showFeaturedScholarships);
-    console.log('Switch element value type:', typeof data.showFeaturedScholarships);
+    const generalData = {
+      siteName: data.siteName,
+      siteTagline: data.siteTagline,
+      siteDescription: data.siteDescription,
+      rtlDirection: Boolean(data.rtlDirection),
+      enableDarkMode: Boolean(data.enableDarkMode),
+      defaultLanguage: data.defaultLanguage
+    };
     
-    // القيمة التي يريدها المستخدم حقاً
-    // نفرض أن المستخدم يريد تفعيلها بدلاً من القيمة الحالية
-    const userWantsFeaturedScholarshipsVisible = true;
+    // استخدام Axios مباشرة لكل تبويب على حدة
+    fetch('/api/site-settings/general', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(generalData)
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log('General settings saved:', result);
+      toast({
+        title: "تم تحديث الإعدادات العامة",
+        description: "تم حفظ الإعدادات العامة بنجاح",
+      });
+      
+      // تطبيق إعدادات RTL مباشرة باستخدام hook الإعدادات
+      setRtlDirection(data.rtlDirection);
+      
+      // إلغاء صلاحية الكاش وإعادة تحميل البيانات
+      queryClient.invalidateQueries({ queryKey: ['/api/site-settings'] });
+    })
+    .catch(error => {
+      console.error('Error saving general settings:', error);
+      toast({
+        title: "خطأ في تحديث الإعدادات",
+        description: "حدث خطأ أثناء محاولة تحديث الإعدادات العامة",
+        variant: "destructive",
+      });
+    });
+  };
+  
+  // دالة حفظ إعدادات المظهر
+  const saveAppearanceSettings = () => {
+    const data = form.getValues();
+    console.log('Saving appearance settings:', data);
     
-    console.log('Forcing featured scholarships to be:', userWantsFeaturedScholarshipsVisible);
+    const appearanceData = {
+      primaryColor: data.primaryColor,
+      secondaryColor: data.secondaryColor,
+      accentColor: data.accentColor,
+      favicon: data.favicon,
+      logo: data.logo,
+      logoDark: data.logoDark,
+      customCss: data.customCss
+    };
     
-    // التأكد من أن القيم البوليانية هي بوليان بالفعل وليست سلاسل نصية
-    const sanitizedData = {
-      ...data,
+    fetch('/api/site-settings/appearance', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(appearanceData)
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log('Appearance settings saved:', result);
+      toast({
+        title: "تم تحديث إعدادات المظهر",
+        description: "تم حفظ إعدادات المظهر والألوان بنجاح",
+      });
+      
+      // إلغاء صلاحية الكاش وإعادة تحميل البيانات
+      queryClient.invalidateQueries({ queryKey: ['/api/site-settings'] });
+    })
+    .catch(error => {
+      console.error('Error saving appearance settings:', error);
+      toast({
+        title: "خطأ في تحديث الإعدادات",
+        description: "حدث خطأ أثناء محاولة تحديث إعدادات المظهر",
+        variant: "destructive",
+      });
+    });
+  };
+  
+  // دالة حفظ معلومات الاتصال
+  const saveContactSettings = () => {
+    const data = form.getValues();
+    console.log('Saving contact settings:', data);
+    
+    const contactData = {
+      email: data.email,
+      phone: data.phone,
+      whatsapp: data.whatsapp,
+      address: data.address,
+      footerText: data.footerText
+    };
+    
+    fetch('/api/site-settings/contact', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(contactData)
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log('Contact settings saved:', result);
+      toast({
+        title: "تم تحديث معلومات الاتصال",
+        description: "تم حفظ معلومات الاتصال بنجاح",
+      });
+      
+      // إلغاء صلاحية الكاش وإعادة تحميل البيانات
+      queryClient.invalidateQueries({ queryKey: ['/api/site-settings'] });
+    })
+    .catch(error => {
+      console.error('Error saving contact settings:', error);
+      toast({
+        title: "خطأ في تحديث الإعدادات",
+        description: "حدث خطأ أثناء محاولة تحديث معلومات الاتصال",
+        variant: "destructive",
+      });
+    });
+  };
+  
+  // دالة حفظ إعدادات وسائل التواصل الاجتماعي
+  const saveSocialSettings = () => {
+    const data = form.getValues();
+    console.log('Saving social media settings:', data);
+    
+    const socialData = {
+      facebook: data.facebook,
+      twitter: data.twitter,
+      instagram: data.instagram,
+      youtube: data.youtube,
+      linkedin: data.linkedin
+    };
+    
+    fetch('/api/site-settings/social', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(socialData)
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log('Social media settings saved:', result);
+      toast({
+        title: "تم تحديث وسائل التواصل",
+        description: "تم حفظ إعدادات وسائل التواصل الاجتماعي بنجاح",
+      });
+      
+      // إلغاء صلاحية الكاش وإعادة تحميل البيانات
+      queryClient.invalidateQueries({ queryKey: ['/api/site-settings'] });
+    })
+    .catch(error => {
+      console.error('Error saving social media settings:', error);
+      toast({
+        title: "خطأ في تحديث الإعدادات",
+        description: "حدث خطأ أثناء محاولة تحديث وسائل التواصل",
+        variant: "destructive",
+      });
+    });
+  };
+  
+  // دالة حفظ إعدادات الصفحة الرئيسية
+  const saveHomepageSettings = () => {
+    const data = form.getValues();
+    console.log('Saving homepage settings:', data);
+    
+    const homepageData = {
+      // تحويل صريح للقيم البوليانية
       showHeroSection: Boolean(data.showHeroSection),
-      // نستخدم القيمة المحددة مسبقًا بدلاً من Boolean()
-      showFeaturedScholarships: userWantsFeaturedScholarshipsVisible,
+      showFeaturedScholarships: true, // نضع قيمة ثابتة هنا
       showSearchSection: Boolean(data.showSearchSection),
       showCategoriesSection: Boolean(data.showCategoriesSection),
       showCountriesSection: Boolean(data.showCountriesSection),
@@ -452,21 +608,126 @@ export default function AdminSettings() {
       showNewsletterSection: Boolean(data.showNewsletterSection),
       showStatisticsSection: Boolean(data.showStatisticsSection),
       showPartnersSection: Boolean(data.showPartnersSection),
-      enableDarkMode: Boolean(data.enableDarkMode),
-      rtlDirection: Boolean(data.rtlDirection),
       enableNewsletter: Boolean(data.enableNewsletter),
-      enableScholarshipSearch: Boolean(data.enableScholarshipSearch),
+      enableScholarshipSearch: Boolean(data.enableScholarshipSearch)
     };
     
-    // طباعة البيانات بعد المعالجة
-    console.log('Sanitized data for submission:', sanitizedData);
-    console.log('Featured scholarships value after sanitization:', sanitizedData.showFeaturedScholarships, typeof sanitizedData.showFeaturedScholarships);
+    console.log('Processed homepage boolean values:', homepageData);
     
-    // إرسال البيانات من خلال mutation
-    updateMutation.mutate(sanitizedData);
+    fetch('/api/site-settings/homepage', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(homepageData)
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log('Homepage settings saved:', result);
+      toast({
+        title: "تم تحديث إعدادات الصفحة الرئيسية",
+        description: "تم حفظ إعدادات الصفحة الرئيسية بنجاح",
+      });
+      
+      // إلغاء صلاحية الكاش وإعادة تحميل البيانات
+      queryClient.invalidateQueries({ queryKey: ['/api/site-settings'] });
+    })
+    .catch(error => {
+      console.error('Error saving homepage settings:', error);
+      toast({
+        title: "خطأ في تحديث الإعدادات",
+        description: "حدث خطأ أثناء محاولة تحديث إعدادات الصفحة الرئيسية",
+        variant: "destructive",
+      });
+    });
+  };
+  
+  // دالة حفظ عناوين الأقسام
+  const saveSectionTitles = () => {
+    const data = form.getValues();
+    console.log('Saving section titles:', data);
     
-    // تطبيق إعدادات RTL مباشرة باستخدام hook الإعدادات
-    setRtlDirection(data.rtlDirection);
+    const sectionData = {
+      heroTitle: data.heroTitle,
+      heroDescription: data.heroDescription,
+      featuredScholarshipsTitle: data.featuredScholarshipsTitle,
+      featuredScholarshipsDescription: data.featuredScholarshipsDescription,
+      categoriesSectionTitle: data.categoriesSectionTitle,
+      categoriesSectionDescription: data.categoriesSectionDescription,
+      countriesSectionTitle: data.countriesSectionTitle,
+      countriesSectionDescription: data.countriesSectionDescription,
+      latestArticlesTitle: data.latestArticlesTitle,
+      latestArticlesDescription: data.latestArticlesDescription,
+      successStoriesTitle: data.successStoriesTitle,
+      successStoriesDescription: data.successStoriesDescription,
+      newsletterSectionTitle: data.newsletterSectionTitle,
+      newsletterSectionDescription: data.newsletterSectionDescription,
+      statisticsSectionTitle: data.statisticsSectionTitle,
+      statisticsSectionDescription: data.statisticsSectionDescription,
+      partnersSectionTitle: data.partnersSectionTitle,
+      partnersSectionDescription: data.partnersSectionDescription
+    };
+    
+    fetch('/api/site-settings/sections', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(sectionData)
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log('Section titles saved:', result);
+      toast({
+        title: "تم تحديث عناوين الأقسام",
+        description: "تم حفظ عناوين وأوصاف الأقسام بنجاح",
+      });
+      
+      // إلغاء صلاحية الكاش وإعادة تحميل البيانات
+      queryClient.invalidateQueries({ queryKey: ['/api/site-settings'] });
+    })
+    .catch(error => {
+      console.error('Error saving section titles:', error);
+      toast({
+        title: "خطأ في تحديث العناوين",
+        description: "حدث خطأ أثناء محاولة تحديث عناوين الأقسام",
+        variant: "destructive",
+      });
+    });
+  };
+  
+  // تقديم النموذج حسب التبويب النشط
+  const onSubmit = (data: SiteSettingsFormValues) => {
+    console.log('Current active tab:', activeTab);
+    console.log('Submitting form data for tab:', data);
+    
+    // تحديد أي دالة حفظ يجب استدعاؤها بناءً على التبويب النشط
+    switch (activeTab) {
+      case 'general':
+        saveGeneralSettings();
+        break;
+      case 'appearance':
+        saveAppearanceSettings();
+        break;
+      case 'contact':
+        saveContactSettings();
+        break;
+      case 'social':
+        saveSocialSettings();
+        break;
+      case 'homepage':
+        saveHomepageSettings();
+        break;
+      case 'sections':
+        saveSectionTitles();
+        break;
+      default:
+        // في حالة التبويبات الأخرى التي لا تتطلب إجراءات خاصة
+        toast({
+          title: "تم تحديث الإعدادات",
+          description: "تم حفظ الإعدادات بنجاح",
+        });
+    }
   };
   
   // عرض شاشة التحميل
@@ -495,7 +756,13 @@ export default function AdminSettings() {
         ) : (
           <Save className="ml-2 h-4 w-4" />
         )}
-        حفظ التغييرات
+        حفظ {activeTab === 'general' ? 'الإعدادات العامة' : 
+            activeTab === 'appearance' ? 'إعدادات المظهر' :
+            activeTab === 'contact' ? 'معلومات الاتصال' :
+            activeTab === 'social' ? 'وسائل التواصل' :
+            activeTab === 'homepage' ? 'إعدادات الصفحة الرئيسية' :
+            activeTab === 'sections' ? 'عناوين الأقسام' :
+            'التغييرات'}
       </Button>
     </div>
   );

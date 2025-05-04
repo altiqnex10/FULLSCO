@@ -874,6 +874,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(settings);
   });
 
+  // تحديث كل إعدادات الموقع دفعة واحدة
   app.put("/api/site-settings", isAdmin, async (req, res) => {
     try {
       console.log("Received site settings update request:", JSON.stringify(req.body, null, 2));
@@ -903,6 +904,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Failed to update settings", 
         details: (error as Error).message 
       });
+    }
+  });
+  
+  // تحديث إعدادات الموقع العامة فقط (التبويب العام)
+  app.patch("/api/site-settings/general", isAdmin, async (req, res) => {
+    try {
+      console.log("Updating general site settings:", JSON.stringify(req.body, null, 2));
+      
+      const data = insertSiteSettingsSchema.partial().parse({
+        siteName: req.body.siteName,
+        siteTagline: req.body.siteTagline,
+        siteDescription: req.body.siteDescription,
+        rtlDirection: req.body.rtlDirection === true,
+        enableDarkMode: req.body.enableDarkMode === true,
+        defaultLanguage: req.body.defaultLanguage
+      });
+      
+      // تحديث الإعدادات
+      const settings = await storage.updateSiteSettings(data);
+      console.log("General settings updated successfully");
+      
+      // إرجاع الإعدادات المحدثة
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating general settings:", error);
+      res.status(500).json({ message: "Failed to update general settings", error: (error as Error).message });
+    }
+  });
+  
+  // تحديث إعدادات المظهر والألوان فقط
+  app.patch("/api/site-settings/appearance", isAdmin, async (req, res) => {
+    try {
+      console.log("Updating appearance settings:", JSON.stringify(req.body, null, 2));
+      
+      const data = insertSiteSettingsSchema.partial().parse({
+        primaryColor: req.body.primaryColor,
+        secondaryColor: req.body.secondaryColor,
+        accentColor: req.body.accentColor,
+        favicon: req.body.favicon,
+        logo: req.body.logo,
+        logoDark: req.body.logoDark,
+        customCss: req.body.customCss
+      });
+      
+      const settings = await storage.updateSiteSettings(data);
+      console.log("Appearance settings updated successfully");
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating appearance settings:", error);
+      res.status(500).json({ message: "Failed to update appearance settings", error: (error as Error).message });
+    }
+  });
+  
+  // تحديث معلومات الاتصال فقط
+  app.patch("/api/site-settings/contact", isAdmin, async (req, res) => {
+    try {
+      console.log("Updating contact settings:", JSON.stringify(req.body, null, 2));
+      
+      const data = insertSiteSettingsSchema.partial().parse({
+        email: req.body.email,
+        phone: req.body.phone,
+        whatsapp: req.body.whatsapp,
+        address: req.body.address,
+        footerText: req.body.footerText
+      });
+      
+      const settings = await storage.updateSiteSettings(data);
+      console.log("Contact settings updated successfully");
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating contact settings:", error);
+      res.status(500).json({ message: "Failed to update contact settings", error: (error as Error).message });
+    }
+  });
+  
+  // تحديث إعدادات وسائل التواصل الاجتماعي فقط
+  app.patch("/api/site-settings/social", isAdmin, async (req, res) => {
+    try {
+      console.log("Updating social media settings:", JSON.stringify(req.body, null, 2));
+      
+      const data = insertSiteSettingsSchema.partial().parse({
+        facebook: req.body.facebook,
+        twitter: req.body.twitter,
+        instagram: req.body.instagram,
+        youtube: req.body.youtube,
+        linkedin: req.body.linkedin
+      });
+      
+      const settings = await storage.updateSiteSettings(data);
+      console.log("Social media settings updated successfully");
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating social media settings:", error);
+      res.status(500).json({ message: "Failed to update social media settings", error: (error as Error).message });
+    }
+  });
+  
+  // تحديث إعدادات الصفحة الرئيسية فقط (إظهار/إخفاء الأقسام)
+  app.patch("/api/site-settings/homepage", isAdmin, async (req, res) => {
+    try {
+      console.log("Updating homepage settings:", JSON.stringify(req.body, null, 2));
+      
+      // تحويل صريح للقيم البوليانية
+      const data = insertSiteSettingsSchema.partial().parse({
+        showHeroSection: req.body.showHeroSection === true,
+        showFeaturedScholarships: req.body.showFeaturedScholarships === true,
+        showSearchSection: req.body.showSearchSection === true,
+        showCategoriesSection: req.body.showCategoriesSection === true,
+        showCountriesSection: req.body.showCountriesSection === true,
+        showLatestArticles: req.body.showLatestArticles === true,
+        showSuccessStories: req.body.showSuccessStories === true,
+        showNewsletterSection: req.body.showNewsletterSection === true,
+        showStatisticsSection: req.body.showStatisticsSection === true,
+        showPartnersSection: req.body.showPartnersSection === true,
+        enableNewsletter: req.body.enableNewsletter === true,
+        enableScholarshipSearch: req.body.enableScholarshipSearch === true
+      });
+      
+      console.log("Processing homepage settings with boolean values:", JSON.stringify(data, null, 2));
+      
+      const settings = await storage.updateSiteSettings(data);
+      console.log("Homepage settings updated successfully");
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating homepage settings:", error);
+      res.status(500).json({ message: "Failed to update homepage settings", error: (error as Error).message });
+    }
+  });
+  
+  // تحديث عناوين الأقسام فقط
+  app.patch("/api/site-settings/sections", isAdmin, async (req, res) => {
+    try {
+      console.log("Updating section titles and descriptions:", JSON.stringify(req.body, null, 2));
+      
+      const data = insertSiteSettingsSchema.partial().parse({
+        heroTitle: req.body.heroTitle,
+        heroDescription: req.body.heroDescription,
+        featuredScholarshipsTitle: req.body.featuredScholarshipsTitle,
+        featuredScholarshipsDescription: req.body.featuredScholarshipsDescription,
+        categoriesSectionTitle: req.body.categoriesSectionTitle,
+        categoriesSectionDescription: req.body.categoriesSectionDescription,
+        countriesSectionTitle: req.body.countriesSectionTitle,
+        countriesSectionDescription: req.body.countriesSectionDescription,
+        latestArticlesTitle: req.body.latestArticlesTitle,
+        latestArticlesDescription: req.body.latestArticlesDescription,
+        successStoriesTitle: req.body.successStoriesTitle,
+        successStoriesDescription: req.body.successStoriesDescription,
+        newsletterSectionTitle: req.body.newsletterSectionTitle,
+        newsletterSectionDescription: req.body.newsletterSectionDescription,
+        statisticsSectionTitle: req.body.statisticsSectionTitle,
+        statisticsSectionDescription: req.body.statisticsSectionDescription,
+        partnersSectionTitle: req.body.partnersSectionTitle,
+        partnersSectionDescription: req.body.partnersSectionDescription
+      });
+      
+      const settings = await storage.updateSiteSettings(data);
+      console.log("Section titles updated successfully");
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating section titles:", error);
+      res.status(500).json({ message: "Failed to update section titles", error: (error as Error).message });
     }
   });
 
