@@ -335,24 +335,58 @@ export default function AdminSettings() {
       return response.json();
     },
     onSuccess: (data) => {
+      console.log('Mutation succeeded with data:', data);
+
       // إلغاء صلاحية الكاش وإعادة تحميل البيانات
       queryClient.invalidateQueries({ queryKey: ['/api/site-settings'] });
       
-      // إعادة تحميل البيانات من الخادم بشكل صريح
-      refetch();
+      // معالجة القيم البوليانية قبل إعادة تعيين النموذج
+      // هذه الدالة تضمن أن جميع القيم البوليانية في صيغتها الصحيحة
+      function processBooleanFields(inputData: any): any {
+        const processedData = { ...inputData };
+        const booleanFields = [
+          'showHeroSection', 'showFeaturedScholarships', 'showSearchSection',
+          'showCategoriesSection', 'showCountriesSection', 'showLatestArticles',
+          'showSuccessStories', 'showNewsletterSection', 'showStatisticsSection',
+          'showPartnersSection', 'enableDarkMode', 'rtlDirection',
+          'enableNewsletter', 'enableScholarshipSearch'
+        ];
+        
+        // تحويل أي قيم نصية إلى القيم البوليانية الصحيحة
+        booleanFields.forEach(field => {
+          if (field in processedData) {
+            const value = processedData[field];
+            // تحويل القيم المختلفة إلى boolean
+            processedData[field] = value === true || value === 't' || value === 'true' || value === 1 || value === '1';
+            console.log(`Processed boolean field ${field}: ${value} (${typeof value}) -> ${processedData[field]}`);
+          }
+        });
+        
+        return processedData;
+      }
+      
+      // معالجة البيانات وإعادة تحميلها بشكل صريح
+      refetch().then(() => {
+        console.log('Data refetched after mutation');
+      });
       
       // تحديث نموذج البيانات بالبيانات المحدثة
       if (data) {
+        // معالجة القيم البوليانية
+        const processedData = processBooleanFields(data);
+        
         const formValues: SiteSettingsFormValues = {
-          ...data,
+          ...processedData,
           // ضمان تحويل أي قيم نصية فارغة إلى سلاسل فارغة
-          siteTagline: data.siteTagline || '',
-          siteDescription: data.siteDescription || '',
-          favicon: data.favicon || '',
-          logo: data.logo || '',
-          logoDark: data.logoDark || '',
+          siteTagline: processedData.siteTagline || '',
+          siteDescription: processedData.siteDescription || '',
+          favicon: processedData.favicon || '',
+          logo: processedData.logo || '',
+          logoDark: processedData.logoDark || '',
           // ... إضافة كل الحقول المطلوبة
         };
+        
+        console.log('Resetting form with processed values:', formValues);
         form.reset(formValues);
       }
       
