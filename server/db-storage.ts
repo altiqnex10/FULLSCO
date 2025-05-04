@@ -446,7 +446,8 @@ export class DatabaseStorage implements IStorage {
   async listCategories(): Promise<Category[]> {
     try {
       // استخدم أمر SQL خام لتجنب مشكلة الحقول غير الموجودة
-      const result = await db.execute(sql`SELECT id, name, description, created_at FROM categories`);
+      // نتأكد من عدم طلب أعمدة غير موجودة
+      const result = await db.execute(sql`SELECT id, name, description FROM categories`);
       
       // @ts-ignore - PostgreSQL driver returns rows as an array
       const categoriesList = (result.rows || []).map((category: any) => ({
@@ -454,7 +455,7 @@ export class DatabaseStorage implements IStorage {
         name: category.name,
         slug: category.name?.toLowerCase().replace(/\s+/g, '-') || '', // إنشاء slug من الاسم
         description: category.description,
-        createdAt: category.created_at
+        createdAt: new Date() // نستخدم التاريخ الحالي حيث أن عمود created_at غير موجود
       }));
       
       return categoriesList;
