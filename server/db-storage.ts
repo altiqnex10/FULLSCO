@@ -813,11 +813,29 @@ export class DatabaseStorage implements IStorage {
         
         // عناوين وأوصاف الأقسام
         heroTitle: dbSettings.hero_title || null,
+        heroSubtitle: dbSettings.hero_subtitle || null,
         heroDescription: dbSettings.hero_description || null,
         featuredScholarshipsTitle: dbSettings.featured_scholarships_title || null,
         featuredScholarshipsDescription: dbSettings.featured_scholarships_description || null,
         categoriesSectionTitle: dbSettings.categories_section_title || null,
         categoriesSectionDescription: dbSettings.categories_section_description || null,
+        countriesSectionTitle: dbSettings.countries_section_title || null,
+        countriesSectionDescription: dbSettings.countries_section_description || null,
+        latestArticlesTitle: dbSettings.latest_articles_title || null,
+        latestArticlesDescription: dbSettings.latest_articles_description || null,
+        successStoriesTitle: dbSettings.success_stories_title || null,
+        successStoriesDescription: dbSettings.success_stories_description || null,
+        newsletterSectionTitle: dbSettings.newsletter_section_title || null,
+        newsletterSectionDescription: dbSettings.newsletter_section_description || null,
+        statisticsSectionTitle: dbSettings.statistics_section_title || null,
+        statisticsSectionDescription: dbSettings.statistics_section_description || null,
+        partnersSectionTitle: dbSettings.partners_section_title || null,
+        partnersSectionDescription: dbSettings.partners_section_description || null,
+        
+        // تخطيط الصفحات
+        homePageLayout: dbSettings.home_page_layout || 'default',
+        scholarshipPageLayout: dbSettings.scholarship_page_layout || 'default',
+        articlePageLayout: dbSettings.article_page_layout || 'default',
         
         // حقول أخرى
         customCss: dbSettings.custom_css || null
@@ -852,63 +870,6 @@ export class DatabaseStorage implements IStorage {
       console.log(`  -> no match, returning null`);
       return null;
     };
-    
-    // Create a settings object with required fields from the schema
-    // Adding null/default values for missing columns
-    const settings: any = {
-      id: dbSettings.id,
-      siteName: dbSettings.site_name,
-      siteTagline: dbSettings.site_tagline || null,
-      siteDescription: dbSettings.site_description || null,
-      favicon: dbSettings.favicon || null,
-      logo: dbSettings.logo || null,
-      logoDark: dbSettings.logo_dark || null,
-      email: dbSettings.email || null,
-      phone: dbSettings.phone || null,
-      whatsapp: dbSettings.whatsapp || null,
-      address: dbSettings.address || null,
-      facebook: dbSettings.facebook || null,
-      twitter: dbSettings.twitter || null,
-      instagram: dbSettings.instagram || null,
-      youtube: dbSettings.youtube || null,
-      linkedin: dbSettings.linkedin || null,
-      primaryColor: dbSettings.primary_color || null,
-      secondaryColor: dbSettings.secondary_color || null,
-      accentColor: dbSettings.accent_color || null,
-      enableDarkMode: convertPostgresBooleanToJs(dbSettings.enable_dark_mode),
-      rtlDirection: convertPostgresBooleanToJs(dbSettings.rtl_direction),
-      defaultLanguage: dbSettings.default_language || null,
-      enableNewsletter: convertPostgresBooleanToJs(dbSettings.enable_newsletter),
-      enableScholarshipSearch: convertPostgresBooleanToJs(dbSettings.enable_scholarship_search),
-      footerText: dbSettings.footer_text || null,
-      
-      // إضافة جميع حقول إظهار/إخفاء الأقسام مع تحويل قيمها البوليانية
-      showHeroSection: convertPostgresBooleanToJs(dbSettings.show_hero_section),
-      showFeaturedScholarships: convertPostgresBooleanToJs(dbSettings.show_featured_scholarships),
-      showSearchSection: convertPostgresBooleanToJs(dbSettings.show_search_section),
-      showCategoriesSection: convertPostgresBooleanToJs(dbSettings.show_categories_section),
-      showCountriesSection: convertPostgresBooleanToJs(dbSettings.show_countries_section),
-      showLatestArticles: convertPostgresBooleanToJs(dbSettings.show_latest_articles),
-      showSuccessStories: convertPostgresBooleanToJs(dbSettings.show_success_stories),
-      showNewsletterSection: convertPostgresBooleanToJs(dbSettings.show_newsletter_section),
-      showStatisticsSection: convertPostgresBooleanToJs(dbSettings.show_statistics_section),
-      showPartnersSection: convertPostgresBooleanToJs(dbSettings.show_partners_section),
-      
-      // عناوين وأوصاف الأقسام
-      heroTitle: dbSettings.hero_title || null,
-      heroDescription: dbSettings.hero_description || null,
-      featuredScholarshipsTitle: dbSettings.featured_scholarships_title || null,
-      featuredScholarshipsDescription: dbSettings.featured_scholarships_description || null,
-      categoriesSectionTitle: dbSettings.categories_section_title || null,
-      categoriesSectionDescription: dbSettings.categories_section_description || null,
-      
-      // حقول أخرى
-      customCss: dbSettings.custom_css || null
-    };
-    
-    console.log('Processed site settings:', settings);
-    
-    return settings as SiteSetting;
   }
 
   async updateSiteSettings(settings: Partial<InsertSiteSetting>): Promise<SiteSetting> {
@@ -975,24 +936,35 @@ export class DatabaseStorage implements IStorage {
           
           // حذف الخصائص التي ليست جزءًا من الجدول لتجنب أخطاء SQL
           const knownColumns = [
+            // الحقول الأساسية
             'site_name', 'site_tagline', 'site_description', 'favicon', 'logo', 'logo_dark',
             'email', 'phone', 'whatsapp', 'address', 'facebook', 'twitter', 'instagram',
             'youtube', 'linkedin', 'primary_color', 'secondary_color', 'accent_color',
             'enable_dark_mode', 'rtl_direction', 'default_language', 'enable_newsletter',
-            'enable_scholarship_search', 'footer_text', 'show_hero_section',
+            'enable_scholarship_search', 'footer_text',
+            
+            // حقول إظهار/إخفاء الأقسام
+            'show_hero_section',
             'show_featured_scholarships', 'show_search_section', 'show_categories_section',
             'show_countries_section', 'show_latest_articles', 'show_success_stories',
             'show_newsletter_section', 'show_statistics_section', 'show_partners_section',
-            'hero_title', 'hero_subtitle', 'hero_description', 'featured_scholarships_title',
-            'featured_scholarships_description', 'categories_section_title',
-            'categories_section_description', 'countries_section_title',
-            'countries_section_description', 'latest_articles_title',
-            'latest_articles_description', 'success_stories_title',
-            'success_stories_description', 'newsletter_section_title',
-            'newsletter_section_description', 'statistics_section_title',
-            'statistics_section_description', 'partners_section_title',
-            'partners_section_description', 'home_page_layout',
-            'scholarship_page_layout', 'article_page_layout', 'custom_css'
+            
+            // عناوين وأوصاف الأقسام
+            'hero_title', 'hero_subtitle', 'hero_description',
+            'featured_scholarships_title', 'featured_scholarships_description',
+            'categories_section_title', 'categories_section_description',
+            'countries_section_title', 'countries_section_description',
+            'latest_articles_title', 'latest_articles_description',
+            'success_stories_title', 'success_stories_description',
+            'newsletter_section_title', 'newsletter_section_description',
+            'statistics_section_title', 'statistics_section_description',
+            'partners_section_title', 'partners_section_description',
+            
+            // تخطيط الصفحات
+            'home_page_layout', 'scholarship_page_layout', 'article_page_layout',
+            
+            // أخرى
+            'custom_css'
           ];
           
           const validDbSettings: Record<string, any> = {};
