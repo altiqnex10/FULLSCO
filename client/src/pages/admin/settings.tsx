@@ -224,29 +224,15 @@ export default function AdminSettings() {
     enabled: isAuthenticated,
   });
 
-  // نموذج إعدادات الموقع
+  // نموذج إعدادات الموقع (بدون قيم افتراضية - سيتم تعيينها لاحقًا من البيانات المستلمة)
   const form = useForm<SiteSettingsFormValues>({
     resolver: zodResolver(siteSettingsSchema),
-    defaultValues: {
-      siteName: '',
-      rtlDirection: true,
-      enableDarkMode: true,
-      defaultLanguage: 'ar',
-      enableNewsletter: true,
-      enableScholarshipSearch: true,
-      showHeroSection: true,
-      showFeaturedScholarships: true,
-      showSearchSection: true,
-      showCategoriesSection: true,
-      showCountriesSection: true,
-      showLatestArticles: true,
-      showSuccessStories: true,
-      showNewsletterSection: true,
-      showStatisticsSection: true,
-      showPartnersSection: true,
-      // تم حذف متغيرات تخطيطات الصفحات
-    },
+    // القيم الافتراضية الأولية فارغة لتجنب تعارضها مع بيانات قاعدة البيانات الفعلية
   });
+  
+  // عند تهيئة النموذج، نضيف سجل للمساعدة في تتبع المشكلات
+  console.log('Form initialized without default values to avoid conflicts');
+
 
   // تحديث قيم النموذج عند استلام البيانات
   useEffect(() => {
@@ -279,16 +265,17 @@ export default function AdminSettings() {
         footerText: siteSettings.footerText || '',
         
         // إعدادات إظهار/إخفاء الأقسام
-        showHeroSection: siteSettings.showHeroSection ?? true,
-        showFeaturedScholarships: siteSettings.showFeaturedScholarships ?? true,
-        showSearchSection: siteSettings.showSearchSection ?? true,
-        showCategoriesSection: siteSettings.showCategoriesSection ?? true,
-        showCountriesSection: siteSettings.showCountriesSection ?? true,
-        showLatestArticles: siteSettings.showLatestArticles ?? true,
-        showSuccessStories: siteSettings.showSuccessStories ?? true,
-        showNewsletterSection: siteSettings.showNewsletterSection ?? true,
-        showStatisticsSection: siteSettings.showStatisticsSection ?? true,
-        showPartnersSection: siteSettings.showPartnersSection ?? true,
+        // استخدام دالة مساعدة لتجنب أخطاء التنميط
+        showHeroSection: Boolean(siteSettings.showHeroSection),
+        showFeaturedScholarships: Boolean(siteSettings.showFeaturedScholarships),
+        showSearchSection: Boolean(siteSettings.showSearchSection),
+        showCategoriesSection: Boolean(siteSettings.showCategoriesSection),
+        showCountriesSection: Boolean(siteSettings.showCountriesSection),
+        showLatestArticles: Boolean(siteSettings.showLatestArticles),
+        showSuccessStories: Boolean(siteSettings.showSuccessStories),
+        showNewsletterSection: Boolean(siteSettings.showNewsletterSection),
+        showStatisticsSection: Boolean(siteSettings.showStatisticsSection),
+        showPartnersSection: Boolean(siteSettings.showPartnersSection),
         
         // عناوين وأوصاف الأقسام
         heroTitle: siteSettings.heroTitle || '',
