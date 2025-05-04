@@ -992,16 +992,12 @@ export class DatabaseStorage implements IStorage {
           
           // استخدام أسلوب تحديث صريح
           // السبب في المشكلة: يجب استخدام الطريقة الصحيحة للتحديث في drizzle
-          // Usar db.execute en lugar de pool.query para SQL personalizado
-          await db.execute(sql`
-            UPDATE site_settings SET 
-            ${sql.raw(
-              Object.entries(validDbSettings)
-                .map(([key]) => `${key} = ?`)
-                .join(', ')
-            )}
-            WHERE id = ${existingSettings.id}
-          `, Object.values(validDbSettings));
+          // استخدام طريقة drizzle للتحديث بدلاً من SQL المخصص
+          console.log("Using drizzle update method instead of raw SQL");
+          await db.update(siteSettings)
+            .set(validDbSettings)
+            .where(eq(siteSettings.id, existingSettings.id));
+          console.log("Update complete");
           
           console.log("DB storage: site settings updated successfully");
         } else {
