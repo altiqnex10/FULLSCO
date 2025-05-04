@@ -224,14 +224,31 @@ export default function AdminSettings() {
     enabled: isAuthenticated,
   });
 
-  // نموذج إعدادات الموقع (بدون قيم افتراضية - سيتم تعيينها لاحقًا من البيانات المستلمة)
+  // نموذج إعدادات الموقع (مع قيم افتراضية مبدئية للحقول البوليانية لمنع مشكلة uncontrolled/controlled)
   const form = useForm<SiteSettingsFormValues>({
     resolver: zodResolver(siteSettingsSchema),
-    // القيم الافتراضية الأولية فارغة لتجنب تعارضها مع بيانات قاعدة البيانات الفعلية
+    defaultValues: {
+      // قيم افتراضية للحقول البوليانية فقط لمنع مشكلة uncontrolled/controlled
+      siteName: '',
+      rtlDirection: false,
+      enableDarkMode: false,
+      enableNewsletter: false,
+      enableScholarshipSearch: false,
+      showHeroSection: false,
+      showFeaturedScholarships: false,
+      showSearchSection: false,
+      showCategoriesSection: false,
+      showCountriesSection: false,
+      showLatestArticles: false,
+      showSuccessStories: false,
+      showNewsletterSection: false,
+      showStatisticsSection: false,
+      showPartnersSection: false,
+    },
   });
   
   // عند تهيئة النموذج، نضيف سجل للمساعدة في تتبع المشكلات
-  console.log('Form initialized without default values to avoid conflicts');
+  console.log('Form initialized with default values for boolean fields to avoid controlled/uncontrolled issues');
 
 
   // تحديث قيم النموذج عند استلام البيانات
@@ -339,13 +356,30 @@ export default function AdminSettings() {
           'enableNewsletter', 'enableScholarshipSearch'
         ];
         
-        // تحويل أي قيم نصية إلى القيم البوليانية الصحيحة
+        // تحويل أي قيم إلى القيم البوليانية الصحيحة
         booleanFields.forEach(field => {
           if (field in processedData) {
             const value = processedData[field];
-            // تحويل القيم المختلفة إلى boolean
-            processedData[field] = value === true || value === 't' || value === 'true' || value === 1 || value === '1';
-            console.log(`Processed boolean field ${field}: ${value} (${typeof value}) -> ${processedData[field]}`);
+            // فحص القيم وتحويلها إلى قيم بوليانية صحيحة
+            
+            // استخدام منطق محسن للتحويل:
+            // 1. إذا كانت القيمة boolean بالفعل، استخدمها كما هي
+            // 2. إذا كانت string/number، تحقق من القيم المنطقية
+            if (typeof value === 'boolean') {
+              // إذا كانت القيمة بالفعل من نوع boolean، استخدمها مباشرة
+              processedData[field] = value;
+              console.log(`Converting boolean value: ${value}, type: ${typeof value}\n  -> converted to ${value ? 'TRUE' : 'FALSE'}`);
+            } else if (value === null || value === undefined) {
+              // إذا كانت القيمة null أو undefined، استخدم false بشكل افتراضي
+              processedData[field] = false;
+              console.log(`Converting null/undefined value to FALSE for field ${field}`);
+            } else {
+              // للقيم الأخرى (سلاسل، أرقام)، قم بالتحويل إلى قيمة بوليانية منطقية
+              // أي قيمة تعتبر true إذا كانت إما true، 't'، 'true'، 1، أو '1'
+              const boolValue = value === true || value === 't' || value === 'true' || value === 1 || value === '1';
+              processedData[field] = boolValue;
+              console.log(`Converting value: ${value}, type: ${typeof value}\n  -> converted to ${boolValue ? 'TRUE' : 'FALSE'}`);
+            }
           }
         });
         
