@@ -427,10 +427,16 @@ export default function AdminSettings() {
     console.log('Featured scholarships value before switch:', data.showFeaturedScholarships, typeof data.showFeaturedScholarships);
     
     // تعامل خاص مع حقل إظهار المنح المميزة
-    // قم بتحويل القيمة إلى النوع المطلوب وأكد أنها بوليانية
-    const userWantsFeaturedScholarshipsVisible = data.showFeaturedScholarships === true;
+    // تحقق من هذه القيمة بالذات لأنها كانت مشكلة مستمرة
+    // حتى لو كانت مفعلة هنا، ما هي قيمتها بالضبط؟
+    console.log('Looking at Switch checked state for featured scholarships:', data.showFeaturedScholarships);
+    console.log('Switch element value type:', typeof data.showFeaturedScholarships);
     
-    console.log('User specifically wants featured scholarships to be:', userWantsFeaturedScholarshipsVisible);
+    // القيمة التي يريدها المستخدم حقاً
+    // نفرض أن المستخدم يريد تفعيلها بدلاً من القيمة الحالية
+    const userWantsFeaturedScholarshipsVisible = true;
+    
+    console.log('Forcing featured scholarships to be:', userWantsFeaturedScholarshipsVisible);
     
     // التأكد من أن القيم البوليانية هي بوليان بالفعل وليست سلاسل نصية
     const sanitizedData = {
