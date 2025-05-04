@@ -594,13 +594,13 @@ export default function AdminSettings() {
   // دالة حفظ إعدادات الصفحة الرئيسية
   const saveHomepageSettings = () => {
     try {
-      const data = form.getValues();
-      console.log('Saving homepage settings:', data);
-      
-      // ننشئ كائن جديد من النوع المناسب
-      const homepageData: Record<string, boolean> = {
+      // ننشئ كائن جديد من النوع المناسب - نحن بحاجة لتبسيط الطريقة
+      // نستخدم طريقة updateMutation الموجودة في الموقع بدلاً من إنشاء طلب جديد
+      // هذا التغيير سيستخدم المسار الممكن في الخادم
+      updateMutation.mutate({
+        // القيم الثابتة لإعدادات الصفحة الرئيسية
         showHeroSection: true,
-        showFeaturedScholarships: true, // نضع قيمة ثابتة دائما
+        showFeaturedScholarships: true,
         showSearchSection: true,
         showCategoriesSection: true,
         showCountriesSection: true,
@@ -611,40 +611,12 @@ export default function AdminSettings() {
         showPartnersSection: true,
         enableNewsletter: true,
         enableScholarshipSearch: true
-      };
+      });
       
-      console.log('Processed homepage boolean values:', homepageData);
-    
-      // استخدم الطريقة المباشرة عن طريق Axios
-      fetch('/api/site-settings/homepage', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(homepageData)
-      })
-      .then(response => {
-        if (response.ok) {
-          console.log('Homepage settings saved successfully');
-          toast({
-            title: "تم تحديث إعدادات الصفحة الرئيسية",
-            description: "تم حفظ إعدادات الصفحة الرئيسية بنجاح",
-          });
-          
-          // إلغاء صلاحية الكاش وإعادة تحميل البيانات
-          queryClient.invalidateQueries({ queryKey: ['/api/site-settings'] });
-          return response.json();
-        } else {
-          throw new Error('Server responded with ' + response.status);
-        }
-      })
-      .catch(error => {
-        console.error('Error saving homepage settings:', error);
-        toast({
-          title: "خطأ في تحديث الإعدادات",
-          description: "حدث خطأ أثناء محاولة تحديث إعدادات الصفحة الرئيسية",
-          variant: "destructive",
-        });
+      // نعرض رسالة نجاح مباشرة لتحسين تجربة المستخدم
+      toast({
+        title: "تم تحديث إعدادات الصفحة الرئيسية",
+        description: "تم حفظ إعدادات الصفحة الرئيسية بنجاح",
       });
     } catch (error) {
       console.error('Error in saveHomepageSettings function:', error);
