@@ -16,7 +16,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AdminLayout } from '@/components/admin/admin-layout';
+import AdminLayout from '@/components/admin/admin-layout';
 import { 
   RefreshCw, 
   Save, 

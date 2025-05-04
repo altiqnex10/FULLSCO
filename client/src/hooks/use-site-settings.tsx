@@ -21,12 +21,14 @@ const SiteSettingsContext = createContext<{
   isError: boolean;
   refetch: () => Promise<any>;
   setRtlDirection: (value: boolean) => void;
+  updateSettings: (data: Partial<SiteSettings>) => Promise<any>;
 }>({
   siteSettings: null,
   isLoading: true,
   isError: false,
   refetch: async () => {},
   setRtlDirection: () => {},
+  updateSettings: async () => {},
 });
 
 // ثوابت لاستخدامها في localStorage
@@ -69,6 +71,29 @@ export const SiteSettingsProvider: React.FC<{children: React.ReactNode}> = ({ ch
     localStorage.setItem(RTL_STORAGE_KEY, String(value));
     
     console.log('RTL direction updated to:', value);
+  };
+  
+  // وظيفة لتحديث إعدادات الموقع
+  const updateSettings = async (data: Partial<SiteSettings>) => {
+    try {
+      const response = await fetch('/api/site-settings', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        throw new Error('فشل في تحديث إعدادات الموقع');
+      }
+      
+      const updatedSettings = await response.json();
+      return updatedSettings;
+    } catch (error) {
+      console.error('Error updating site settings:', error);
+      throw error;
+    }
   };
 
   // تطبيق إعدادات RTL وألوان الموقع عند تحميل الإعدادات
@@ -193,7 +218,8 @@ export const SiteSettingsProvider: React.FC<{children: React.ReactNode}> = ({ ch
       isLoading, 
       isError, 
       refetch,
-      setRtlDirection
+      setRtlDirection,
+      updateSettings
     }}>
       {children}
     </SiteSettingsContext.Provider>

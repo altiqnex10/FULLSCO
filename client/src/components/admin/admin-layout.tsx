@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { useLocation, useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import Sidebar from '@/components/admin/sidebar';
 import { Menu } from 'lucide-react';
@@ -14,7 +14,7 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const [location, navigate] = useLocation();
+  const [location, setLocation] = useLocation();
   const { user, isLoading } = useAuth();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -22,9 +22,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   // إعادة التوجيه إلى صفحة تسجيل الدخول إذا لم يكن المستخدم مسجل الدخول
   useEffect(() => {
     if (!isLoading && !user) {
-      navigate('/login');
+      setLocation('/login');
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, setLocation]);
 
   // إغلاق السايدبار عند النقر خارجه على الجوال
   useEffect(() => {
