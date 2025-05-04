@@ -165,22 +165,26 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
   
   // للكشف عن المجموعة النشطة تلقائيًا
   useEffect(() => {
-    // تمديد المجموعة التي تحتوي على الرابط النشط تلقائيًا
-    const newExpandedGroups: Record<string, boolean> = {};
+    // إعداد رمادي لحالة القائمة قبل تعيينها (لتجنب مشكلة uncontrolled/controlled)
+    let initialExpandedState: Record<string, boolean> = {};
     
+    // تعيين جميع المجموعات كمغلقة بشكل افتراضي
+    navItems.forEach((_, index) => {
+      initialExpandedState[`group-${index}`] = false;
+    });
+    
+    // ثم تحديد المجموعات النشطة
     navItems.forEach((item, index) => {
       if (item.items) {
         const hasActiveItem = item.items.some(subItem => subItem.href === location);
         if (hasActiveItem) {
-          newExpandedGroups[`group-${index}`] = true;
+          initialExpandedState[`group-${index}`] = true;
         }
       }
     });
     
-    setExpandedGroups(prevState => ({
-      ...prevState,
-      ...newExpandedGroups
-    }));
+    // تعيين الحالة الابتدائية مرة واحدة فقط
+    setExpandedGroups(initialExpandedState);
   }, [location]);
   
   // إزالة تعليق overflow من الجسم عند تنظيف المكون
