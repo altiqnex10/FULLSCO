@@ -904,14 +904,21 @@ export class DatabaseStorage implements IStorage {
       // تحويل القيم البوليانية من قيم جافاسكربت إلى صيغ PostgreSQL
       // حيث أن أي مفتاح يبدأ بـ "show" أو "enable" هو في الأغلب قيمة بوليانية
       Object.keys(cleanedSettings).forEach(key => {
-        if (
-          (key.startsWith('show') || key.startsWith('enable')) && 
-          typeof cleanedSettings[key] === 'boolean'
-        ) {
-          console.log(`Converting boolean value for key ${key}: ${cleanedSettings[key]}`);
+        // صيغة البيانات النموذجية للقيم البوليانية
+        if (key.startsWith('show') || key.startsWith('enable')) {
+          console.log(`Checking boolean field ${key}: ${cleanedSettings[key]}, type: ${typeof cleanedSettings[key]}`);
+
+          // التأكد من أن القيمة بوليانية (true/false) وليست نصية ('true'/'false')
+          // تحويل صريح لضمان الاتساق
+          if (typeof cleanedSettings[key] === 'string') {
+            // تحويل النص إلى بوليان
+            const stringValue = cleanedSettings[key] as string;
+            cleanedSettings[key] = stringValue === 'true' || stringValue === 't' || stringValue === '1';
+            console.log(`Converted string to boolean for ${key}: ${stringValue} -> ${cleanedSettings[key]}`);
+          }
           
-          // لا حاجة للتحويل هنا، درزل تقوم بالتحويل تلقائيًا
-          // فقط للتوثيق والتأكد من أن القيم البوليانية تتم معالجتها بشكل صحيح
+          // للتدقيق: طباعة القيمة النهائية
+          console.log(`Final boolean value for ${key}: ${cleanedSettings[key]}, type: ${typeof cleanedSettings[key]}`);
         }
       });
       

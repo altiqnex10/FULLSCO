@@ -373,6 +373,10 @@ export default function AdminSettings() {
 
   // تقديم النموذج
   const onSubmit = (data: SiteSettingsFormValues) => {
+    // إضافة سجلات لمراقبة البيانات المرسلة
+    console.log('Submitting form data:', data);
+    console.log('Featured scholarships value being submitted:', data.showFeaturedScholarships, typeof data.showFeaturedScholarships);
+    
     // إرسال البيانات من خلال mutation
     updateMutation.mutate(data);
     
