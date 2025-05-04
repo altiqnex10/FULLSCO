@@ -426,8 +426,31 @@ export default function AdminSettings() {
     console.log('Submitting form data:', data);
     console.log('Featured scholarships value being submitted:', data.showFeaturedScholarships, typeof data.showFeaturedScholarships);
     
+    // التأكد من أن القيم البوليانية هي بوليان بالفعل وليست سلاسل نصية
+    const sanitizedData = {
+      ...data,
+      showHeroSection: Boolean(data.showHeroSection),
+      showFeaturedScholarships: Boolean(data.showFeaturedScholarships),
+      showSearchSection: Boolean(data.showSearchSection),
+      showCategoriesSection: Boolean(data.showCategoriesSection),
+      showCountriesSection: Boolean(data.showCountriesSection),
+      showLatestArticles: Boolean(data.showLatestArticles),
+      showSuccessStories: Boolean(data.showSuccessStories),
+      showNewsletterSection: Boolean(data.showNewsletterSection),
+      showStatisticsSection: Boolean(data.showStatisticsSection),
+      showPartnersSection: Boolean(data.showPartnersSection),
+      enableDarkMode: Boolean(data.enableDarkMode),
+      rtlDirection: Boolean(data.rtlDirection),
+      enableNewsletter: Boolean(data.enableNewsletter),
+      enableScholarshipSearch: Boolean(data.enableScholarshipSearch),
+    };
+    
+    // طباعة البيانات بعد المعالجة
+    console.log('Sanitized data for submission:', sanitizedData);
+    console.log('Featured scholarships value after sanitization:', sanitizedData.showFeaturedScholarships, typeof sanitizedData.showFeaturedScholarships);
+    
     // إرسال البيانات من خلال mutation
-    updateMutation.mutate(data);
+    updateMutation.mutate(sanitizedData);
     
     // تطبيق إعدادات RTL مباشرة باستخدام hook الإعدادات
     setRtlDirection(data.rtlDirection);

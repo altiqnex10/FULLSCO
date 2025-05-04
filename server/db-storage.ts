@@ -913,7 +913,7 @@ export class DatabaseStorage implements IStorage {
 
       // طباعة قيمة حقل showFeaturedScholarships للتحقق منه تحديداً
       if ('showFeaturedScholarships' in cleanedSettings) {
-        console.log(`Special check for showFeaturedScholarships: ${cleanedSettings.showFeaturedScholarships}`);
+        console.log(`Special check for showFeaturedScholarships: ${cleanedSettings.showFeaturedScholarships}, type: ${typeof cleanedSettings.showFeaturedScholarships}`);
       }
       
       console.log("DB storage: cleaned settings:", JSON.stringify(cleanedSettings, null, 2));
@@ -975,9 +975,20 @@ export class DatabaseStorage implements IStorage {
           const validDbSettings: Record<string, any> = {};
           for (const key of Object.keys(dbSettings)) {
             if (knownColumns.includes(key)) {
+              // طباعة قيمة كل حقل بوليان للتأكد من تحويله بشكل صحيح
+              if (key === 'show_featured_scholarships') {
+                console.log(`Final DB value for ${key} before SQL: ${dbSettings[key]}, type: ${typeof dbSettings[key]}`);
+              }
               validDbSettings[key] = dbSettings[key];
             }
           }
+          
+          // إضافة سجل خاص لقيمة showFeaturedScholarships الناتجة
+          console.log(`show_featured_scholarships in validDbSettings: ${validDbSettings['show_featured_scholarships']}, type: ${typeof validDbSettings['show_featured_scholarships']}`);
+          
+          // طباعة استعلام SQL للتدقيق
+          const settingsObj = JSON.stringify(validDbSettings, null, 2);
+          console.log(`Updating settings with: ${settingsObj}`);
           
           // استخدام أسلوب تحديث صريح
           await db.update(siteSettings)
