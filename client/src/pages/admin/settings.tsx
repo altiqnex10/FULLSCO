@@ -326,6 +326,9 @@ export default function AdminSettings() {
   // تحديث إعدادات الموقع - mutation
   const updateMutation = useMutation({
     mutationFn: async (updatedSettings: SiteSettingsFormValues) => {
+      // تسجيل ما يتم إرساله بالضبط إلى الخادم
+      console.log('Sending to server:', JSON.stringify(updatedSettings, null, 2));
+      
       const response = await fetch('/api/site-settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -336,7 +339,10 @@ export default function AdminSettings() {
         throw new Error('فشل في تحديث إعدادات الموقع');
       }
       
-      return response.json();
+      // الحصول على البيانات المسترجعة من الخادم
+      const responseData = await response.json();
+      console.log('Server response data:', JSON.stringify(responseData, null, 2));
+      return responseData;
     },
     onSuccess: (data) => {
       console.log('Mutation succeeded with data:', data);
@@ -344,72 +350,60 @@ export default function AdminSettings() {
       // إلغاء صلاحية الكاش وإعادة تحميل البيانات
       queryClient.invalidateQueries({ queryKey: ['/api/site-settings'] });
       
-      // معالجة القيم البوليانية قبل إعادة تعيين النموذج
-      // هذه الدالة تضمن أن جميع القيم البوليانية في صيغتها الصحيحة
-      function processBooleanFields(inputData: any): any {
-        const processedData = { ...inputData };
-        const booleanFields = [
-          'showHeroSection', 'showFeaturedScholarships', 'showSearchSection',
-          'showCategoriesSection', 'showCountriesSection', 'showLatestArticles',
-          'showSuccessStories', 'showNewsletterSection', 'showStatisticsSection',
-          'showPartnersSection', 'enableDarkMode', 'rtlDirection',
-          'enableNewsletter', 'enableScholarshipSearch'
-        ];
-        
-        // تحويل أي قيم إلى القيم البوليانية الصحيحة
-        booleanFields.forEach(field => {
-          if (field in processedData) {
-            const value = processedData[field];
-            // فحص القيم وتحويلها إلى قيم بوليانية صحيحة
-            
-            // استخدام منطق محسن للتحويل:
-            // 1. إذا كانت القيمة boolean بالفعل، استخدمها كما هي
-            // 2. إذا كانت string/number، تحقق من القيم المنطقية
-            if (typeof value === 'boolean') {
-              // إذا كانت القيمة بالفعل من نوع boolean، استخدمها مباشرة
-              processedData[field] = value;
-              console.log(`Converting boolean value: ${value}, type: ${typeof value}\n  -> converted to ${value ? 'TRUE' : 'FALSE'}`);
-            } else if (value === null || value === undefined) {
-              // إذا كانت القيمة null أو undefined، استخدم false بشكل افتراضي
-              processedData[field] = false;
-              console.log(`Converting null/undefined value to FALSE for field ${field}`);
-            } else {
-              // للقيم الأخرى (سلاسل، أرقام)، قم بالتحويل إلى قيمة بوليانية منطقية
-              // أي قيمة تعتبر true إذا كانت إما true، 't'، 'true'، 1، أو '1'
-              const boolValue = value === true || value === 't' || value === 'true' || value === 1 || value === '1';
-              processedData[field] = boolValue;
-              console.log(`Converting value: ${value}, type: ${typeof value}\n  -> converted to ${boolValue ? 'TRUE' : 'FALSE'}`);
-            }
-          }
-        });
-        
-        return processedData;
-      }
+      // عدم إعادة تعيين النموذج بالبيانات الواردة من الخادم مباشرة
+      // بدلاً من ذلك، ننتظر لإعادة تحميل البيانات بشكل كامل من الخادم
       
-      // معالجة البيانات وإعادة تحميلها بشكل صريح
-      refetch().then(() => {
-        console.log('Data refetched after mutation');
+      // إعادة تحميل البيانات بعد الحفظ
+      refetch().then((result) => {
+        console.log('Data refetched after mutation:', result.data);
+        
+        // تحديث النموذج فقط إذا كانت البيانات المعادة ناجحة
+        if (result.data) {
+          // لا نستخدم البيانات المرجعة من mutation ولكن البيانات المعاد تحميلها
+          const refreshedData = result.data;
+          const formValues: SiteSettingsFormValues = {
+            ...refreshedData,
+            // تحويل القيم النصية الفارغة أو null إلى سلاسل فارغة
+            siteTagline: refreshedData.siteTagline || '',
+            siteDescription: refreshedData.siteDescription || '',
+            favicon: refreshedData.favicon || '',
+            logo: refreshedData.logo || '',
+            logoDark: refreshedData.logoDark || '',
+            email: refreshedData.email || '',
+            phone: refreshedData.phone || '',
+            whatsapp: refreshedData.whatsapp || '',
+            address: refreshedData.address || '',
+            facebook: refreshedData.facebook || '',
+            twitter: refreshedData.twitter || '',
+            instagram: refreshedData.instagram || '',
+            youtube: refreshedData.youtube || '',
+            linkedin: refreshedData.linkedin || '',
+            footerText: refreshedData.footerText || '',
+            heroTitle: refreshedData.heroTitle || '',
+            heroDescription: refreshedData.heroDescription || '',
+            featuredScholarshipsTitle: refreshedData.featuredScholarshipsTitle || '',
+            featuredScholarshipsDescription: refreshedData.featuredScholarshipsDescription || '',
+            categoriesSectionTitle: refreshedData.categoriesSectionTitle || '',
+            categoriesSectionDescription: refreshedData.categoriesSectionDescription || '',
+            countriesSectionTitle: refreshedData.countriesSectionTitle || '',
+            countriesSectionDescription: refreshedData.countriesSectionDescription || '',
+            latestArticlesTitle: refreshedData.latestArticlesTitle || '',
+            latestArticlesDescription: refreshedData.latestArticlesDescription || '',
+            successStoriesTitle: refreshedData.successStoriesTitle || '',
+            successStoriesDescription: refreshedData.successStoriesDescription || '',
+            newsletterSectionTitle: refreshedData.newsletterSectionTitle || '',
+            newsletterSectionDescription: refreshedData.newsletterSectionDescription || '',
+            statisticsSectionTitle: refreshedData.statisticsSectionTitle || '',
+            statisticsSectionDescription: refreshedData.statisticsSectionDescription || '',
+            partnersSectionTitle: refreshedData.partnersSectionTitle || '',
+            partnersSectionDescription: refreshedData.partnersSectionDescription || '',
+            customCss: refreshedData.customCss || '',
+          };
+          
+          console.log('Resetting form with refreshed values:', formValues);
+          form.reset(formValues);
+        }
       });
-      
-      // تحديث نموذج البيانات بالبيانات المحدثة
-      if (data) {
-        // معالجة القيم البوليانية
-        const processedData = processBooleanFields(data);
-        
-        const formValues: SiteSettingsFormValues = {
-          ...processedData,
-          // ضمان تحويل أي قيم نصية فارغة إلى سلاسل فارغة
-          siteTagline: processedData.siteTagline || '',
-          siteDescription: processedData.siteDescription || '',
-          favicon: processedData.favicon || '',
-          logo: processedData.logo || '',
-          logoDark: processedData.logoDark || '',
-          // ... إضافة كل الحقول المطلوبة
-        };
-        
-        console.log('Resetting form with processed values:', formValues);
-        form.reset(formValues);
-      }
       
       toast({
         title: "تم تحديث الإعدادات بنجاح",
