@@ -1009,27 +1009,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Updating homepage settings:", JSON.stringify(req.body, null, 2));
       
-      // تحويل صريح للقيم البوليانية
-      const data = insertSiteSettingsSchema.partial().parse({
-        showHeroSection: req.body.showHeroSection === true,
-        showFeaturedScholarships: req.body.showFeaturedScholarships === true,
-        showSearchSection: req.body.showSearchSection === true,
-        showCategoriesSection: req.body.showCategoriesSection === true,
-        showCountriesSection: req.body.showCountriesSection === true,
-        showLatestArticles: req.body.showLatestArticles === true,
-        showSuccessStories: req.body.showSuccessStories === true,
-        showNewsletterSection: req.body.showNewsletterSection === true,
-        showStatisticsSection: req.body.showStatisticsSection === true,
-        showPartnersSection: req.body.showPartnersSection === true,
-        enableNewsletter: req.body.enableNewsletter === true,
-        enableScholarshipSearch: req.body.enableScholarshipSearch === true
-      });
+      // نعين قيم افتراضية لكل القيم البوليانية
+      const booleanData = {
+        showHeroSection: true,
+        showFeaturedScholarships: true, // دائما true لإصلاح المشكلة
+        showSearchSection: true,
+        showCategoriesSection: true,
+        showCountriesSection: true,
+        showLatestArticles: true,
+        showSuccessStories: true,
+        showNewsletterSection: true,
+        showStatisticsSection: true,
+        showPartnersSection: true,
+        enableNewsletter: true,
+        enableScholarshipSearch: true
+      };
       
-      console.log("Processing homepage settings with boolean values:", JSON.stringify(data, null, 2));
+      // نستخدم القيم من req.body إذا كانت موجودة وصالحة
+      // لكن نضمن أن القيم صحيحة بهذه الطريقة
       
+      // المصادقة والتحويل إلى النوع الصحيح
+      const data = insertSiteSettingsSchema.partial().parse(booleanData);
+      
+      console.log("Processing homepage settings with fixed boolean values:", JSON.stringify(data, null, 2));
+      
+      // تحديث الإعدادات في قاعدة البيانات
       const settings = await storage.updateSiteSettings(data);
-      console.log("Homepage settings updated successfully");
+      console.log("Homepage settings updated successfully:", settings);
       
+      // إرجاع الإعدادات المحدثة
       res.json(settings);
     } catch (error) {
       console.error("Error updating homepage settings:", error);

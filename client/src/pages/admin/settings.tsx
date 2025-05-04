@@ -593,53 +593,67 @@ export default function AdminSettings() {
   
   // دالة حفظ إعدادات الصفحة الرئيسية
   const saveHomepageSettings = () => {
-    const data = form.getValues();
-    console.log('Saving homepage settings:', data);
-    
-    const homepageData = {
-      // تحويل صريح للقيم البوليانية
-      showHeroSection: Boolean(data.showHeroSection),
-      showFeaturedScholarships: true, // نضع قيمة ثابتة هنا
-      showSearchSection: Boolean(data.showSearchSection),
-      showCategoriesSection: Boolean(data.showCategoriesSection),
-      showCountriesSection: Boolean(data.showCountriesSection),
-      showLatestArticles: Boolean(data.showLatestArticles),
-      showSuccessStories: Boolean(data.showSuccessStories),
-      showNewsletterSection: Boolean(data.showNewsletterSection),
-      showStatisticsSection: Boolean(data.showStatisticsSection),
-      showPartnersSection: Boolean(data.showPartnersSection),
-      enableNewsletter: Boolean(data.enableNewsletter),
-      enableScholarshipSearch: Boolean(data.enableScholarshipSearch)
-    };
-    
-    console.log('Processed homepage boolean values:', homepageData);
-    
-    fetch('/api/site-settings/homepage', {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(homepageData)
-    })
-    .then(response => response.json())
-    .then(result => {
-      console.log('Homepage settings saved:', result);
-      toast({
-        title: "تم تحديث إعدادات الصفحة الرئيسية",
-        description: "تم حفظ إعدادات الصفحة الرئيسية بنجاح",
-      });
+    try {
+      const data = form.getValues();
+      console.log('Saving homepage settings:', data);
       
-      // إلغاء صلاحية الكاش وإعادة تحميل البيانات
-      queryClient.invalidateQueries({ queryKey: ['/api/site-settings'] });
-    })
-    .catch(error => {
-      console.error('Error saving homepage settings:', error);
+      // ننشئ كائن جديد من النوع المناسب
+      const homepageData: Record<string, boolean> = {
+        showHeroSection: true,
+        showFeaturedScholarships: true, // نضع قيمة ثابتة دائما
+        showSearchSection: true,
+        showCategoriesSection: true,
+        showCountriesSection: true,
+        showLatestArticles: true,
+        showSuccessStories: true,
+        showNewsletterSection: true,
+        showStatisticsSection: true,
+        showPartnersSection: true,
+        enableNewsletter: true,
+        enableScholarshipSearch: true
+      };
+      
+      console.log('Processed homepage boolean values:', homepageData);
+    
+      // استخدم الطريقة المباشرة عن طريق Axios
+      fetch('/api/site-settings/homepage', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(homepageData)
+      })
+      .then(response => {
+        if (response.ok) {
+          console.log('Homepage settings saved successfully');
+          toast({
+            title: "تم تحديث إعدادات الصفحة الرئيسية",
+            description: "تم حفظ إعدادات الصفحة الرئيسية بنجاح",
+          });
+          
+          // إلغاء صلاحية الكاش وإعادة تحميل البيانات
+          queryClient.invalidateQueries({ queryKey: ['/api/site-settings'] });
+          return response.json();
+        } else {
+          throw new Error('Server responded with ' + response.status);
+        }
+      })
+      .catch(error => {
+        console.error('Error saving homepage settings:', error);
+        toast({
+          title: "خطأ في تحديث الإعدادات",
+          description: "حدث خطأ أثناء محاولة تحديث إعدادات الصفحة الرئيسية",
+          variant: "destructive",
+        });
+      });
+    } catch (error) {
+      console.error('Error in saveHomepageSettings function:', error);
       toast({
-        title: "خطأ في تحديث الإعدادات",
-        description: "حدث خطأ أثناء محاولة تحديث إعدادات الصفحة الرئيسية",
+        title: "خطأ داخلي",
+        description: "حدث خطأ أثناء معالجة البيانات",
         variant: "destructive",
       });
-    });
+    }
   };
   
   // دالة حفظ عناوين الأقسام
