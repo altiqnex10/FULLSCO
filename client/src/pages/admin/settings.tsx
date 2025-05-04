@@ -334,8 +334,28 @@ export default function AdminSettings() {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // إلغاء صلاحية الكاش وإعادة تحميل البيانات
       queryClient.invalidateQueries({ queryKey: ['/api/site-settings'] });
+      
+      // إعادة تحميل البيانات من الخادم بشكل صريح
+      refetch();
+      
+      // تحديث نموذج البيانات بالبيانات المحدثة
+      if (data) {
+        const formValues: SiteSettingsFormValues = {
+          ...data,
+          // ضمان تحويل أي قيم نصية فارغة إلى سلاسل فارغة
+          siteTagline: data.siteTagline || '',
+          siteDescription: data.siteDescription || '',
+          favicon: data.favicon || '',
+          logo: data.logo || '',
+          logoDark: data.logoDark || '',
+          // ... إضافة كل الحقول المطلوبة
+        };
+        form.reset(formValues);
+      }
+      
       toast({
         title: "تم تحديث الإعدادات بنجاح",
         description: "تم حفظ إعدادات الموقع وتطبيقها بنجاح",

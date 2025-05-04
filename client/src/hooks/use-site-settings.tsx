@@ -74,32 +74,60 @@ export const SiteSettingsProvider: React.FC<{children: React.ReactNode}> = ({ ch
   // تطبيق إعدادات RTL وألوان الموقع عند تحميل الإعدادات
   useEffect(() => {
     if (siteSettings) {
-      // تحديث localStorage بالإعدادات
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(siteSettings));
+      // تطبيق قيم البوليان من API
+      const processedSettings = {
+        ...siteSettings,
+        // التحقق من تنسيق القيم البوليانية وتحويلها
+        showHeroSection: convertToBoolean(siteSettings.showHeroSection),
+        showFeaturedScholarships: convertToBoolean(siteSettings.showFeaturedScholarships),
+        showSearchSection: convertToBoolean(siteSettings.showSearchSection),
+        showCategoriesSection: convertToBoolean(siteSettings.showCategoriesSection),
+        showCountriesSection: convertToBoolean(siteSettings.showCountriesSection),
+        showLatestArticles: convertToBoolean(siteSettings.showLatestArticles),
+        showSuccessStories: convertToBoolean(siteSettings.showSuccessStories),
+        showNewsletterSection: convertToBoolean(siteSettings.showNewsletterSection),
+        showStatisticsSection: convertToBoolean(siteSettings.showStatisticsSection),
+        showPartnersSection: convertToBoolean(siteSettings.showPartnersSection),
+        enableDarkMode: convertToBoolean(siteSettings.enableDarkMode),
+        rtlDirection: convertToBoolean(siteSettings.rtlDirection),
+        enableNewsletter: convertToBoolean(siteSettings.enableNewsletter),
+        enableScholarshipSearch: convertToBoolean(siteSettings.enableScholarshipSearch)
+      };
+      
+      console.log('Processed settings with fixed booleans:', processedSettings);
+
+      // تحديث localStorage بالإعدادات المعالجة
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(processedSettings));
       
       // تطبيق إعدادات RTL
-      const rtlDirection = siteSettings.rtlDirection;
+      const rtlDirection = processedSettings.rtlDirection;
       document.dir = rtlDirection ? 'rtl' : 'ltr';
       console.log('RTL direction set from API:', rtlDirection);
       
       // تطبيق ألوان الموقع من إعدادات الموقع
-      if (siteSettings.primaryColor) {
-        document.documentElement.style.setProperty('--primary', hexToHSL(siteSettings.primaryColor));
-        console.log('Primary color set:', siteSettings.primaryColor);
+      if (processedSettings.primaryColor) {
+        document.documentElement.style.setProperty('--primary', hexToHSL(processedSettings.primaryColor));
+        console.log('Primary color set:', processedSettings.primaryColor);
       }
       
-      if (siteSettings.secondaryColor) {
-        document.documentElement.style.setProperty('--accent', hexToHSL(siteSettings.secondaryColor));
-        console.log('Secondary color set:', siteSettings.secondaryColor);
+      if (processedSettings.secondaryColor) {
+        document.documentElement.style.setProperty('--accent', hexToHSL(processedSettings.secondaryColor));
+        console.log('Secondary color set:', processedSettings.secondaryColor);
       }
       
-      if (siteSettings.accentColor) {
+      if (processedSettings.accentColor) {
         // يمكن استخدام لون accentColor كلون ثالث للتمييز
-        document.documentElement.style.setProperty('--info', hexToHSL(siteSettings.accentColor));
-        console.log('Accent color set:', siteSettings.accentColor);
+        document.documentElement.style.setProperty('--info', hexToHSL(processedSettings.accentColor));
+        console.log('Accent color set:', processedSettings.accentColor);
       }
     }
   }, [siteSettings]);
+  
+  // دالة مساعدة لتحويل قيم البوليان من API
+  function convertToBoolean(value: any): boolean {
+    // التحقق من القيم المختلفة التي يمكن أن تأتي من قاعدة البيانات
+    return value === true || value === 't' || value === 'true' || value === 1;
+  }
   
   // دالة لتحويل اللون من HEX إلى HSL (هو التنسيق المستخدم في متغيرات CSS)
   function hexToHSL(hex: string): string {
