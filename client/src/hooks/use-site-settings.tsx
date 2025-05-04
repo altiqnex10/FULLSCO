@@ -71,7 +71,7 @@ export const SiteSettingsProvider: React.FC<{children: React.ReactNode}> = ({ ch
     console.log('RTL direction updated to:', value);
   };
 
-  // تطبيق إعدادات RTL عند تحميل الإعدادات
+  // تطبيق إعدادات RTL وألوان الموقع عند تحميل الإعدادات
   useEffect(() => {
     if (siteSettings) {
       // تحديث localStorage بالإعدادات
@@ -81,8 +81,60 @@ export const SiteSettingsProvider: React.FC<{children: React.ReactNode}> = ({ ch
       const rtlDirection = siteSettings.rtlDirection;
       document.dir = rtlDirection ? 'rtl' : 'ltr';
       console.log('RTL direction set from API:', rtlDirection);
+      
+      // تطبيق ألوان الموقع من إعدادات الموقع
+      if (siteSettings.primaryColor) {
+        document.documentElement.style.setProperty('--primary', hexToHSL(siteSettings.primaryColor));
+        console.log('Primary color set:', siteSettings.primaryColor);
+      }
+      
+      if (siteSettings.secondaryColor) {
+        document.documentElement.style.setProperty('--accent', hexToHSL(siteSettings.secondaryColor));
+        console.log('Secondary color set:', siteSettings.secondaryColor);
+      }
+      
+      if (siteSettings.accentColor) {
+        // يمكن استخدام لون accentColor كلون ثالث للتمييز
+        document.documentElement.style.setProperty('--info', hexToHSL(siteSettings.accentColor));
+        console.log('Accent color set:', siteSettings.accentColor);
+      }
     }
   }, [siteSettings]);
+  
+  // دالة لتحويل اللون من HEX إلى HSL (هو التنسيق المستخدم في متغيرات CSS)
+  function hexToHSL(hex: string): string {
+    // التأكد من أن اللون يبدأ بـ #
+    if (hex.charAt(0) !== '#') {
+      hex = '#' + hex;
+    }
+    
+    // تحويل HEX إلى RGB
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      
+      h = Math.round(h * 60);
+    }
+    
+    s = Math.round(s * 100);
+    l = Math.round(l * 100);
+    
+    return `${h} ${s}% ${l}%`;
+  }
 
   // استرجاع إعدادات RTL من localStorage عند تشغيل التطبيق
   useEffect(() => {
