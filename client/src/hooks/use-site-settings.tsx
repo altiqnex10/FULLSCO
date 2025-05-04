@@ -77,8 +77,10 @@ export const SiteSettingsProvider: React.FC<{children: React.ReactNode}> = ({ ch
   const updateSettings = async (data: Partial<SiteSettings>) => {
     try {
       console.log('Updating settings with data:', data);
+      
+      // نستخدم طريقة PUT بدلاً من PATCH لتتطابق مع الخادم
       const response = await fetch('/api/site-settings', {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
