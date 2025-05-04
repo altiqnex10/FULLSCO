@@ -444,7 +444,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async listCategories(): Promise<Category[]> {
-    return await db.select().from(categories);
+    try {
+      // استخدم أمر SQL خام لتجنب مشكلة الحقول غير الموجودة
+      const result = await db.execute(sql`SELECT id, name, description, created_at FROM categories`);
+      
+      // @ts-ignore - PostgreSQL driver returns rows as an array
+      const categoriesList = (result.rows || []).map((category: any) => ({
+        id: category.id,
+        name: category.name,
+        slug: category.name?.toLowerCase().replace(/\s+/g, '-') || '', // إنشاء slug من الاسم
+        description: category.description,
+        createdAt: category.created_at
+      }));
+      
+      return categoriesList;
+    } catch (error) {
+      console.error('Error listing categories:', error);
+      return [];
+    }
   }
 
   // Level operations
@@ -718,16 +735,86 @@ export class DatabaseStorage implements IStorage {
 
   // Site settings operations
   async getSiteSettings(): Promise<SiteSetting | undefined> {
-    // Use raw query to get the site settings, since schema and actual table structure might differ
-    const result = await db.execute(sql`SELECT * FROM site_settings LIMIT 1`);
-    // @ts-ignore - PostgreSQL driver returns rows as an array
-    if (result.rows && result.rows.length === 0) return undefined;
-    
-    // Map DB fields to our schema
-    // @ts-ignore - PostgreSQL driver returns rows as an array
-    const dbSettings = result.rows[0];
-    
-    console.log('DB settings raw from PostgreSQL:', dbSettings);
+    try {
+      // Use raw query to get the site settings, since schema and actual table structure might differ
+      const result = await db.execute(sql`SELECT * FROM site_settings LIMIT 1`);
+      // @ts-ignore - PostgreSQL driver returns rows as an array
+      if (result.rows && result.rows.length === 0) return undefined;
+      
+      // Map DB fields to our schema
+      // @ts-ignore - PostgreSQL driver returns rows as an array
+      const dbSettings = result.rows[0];
+      
+      console.log('DB settings raw from PostgreSQL:', dbSettings);
+      
+      // تحويل قيم البوليان من PostgreSQL ('t'/'f') إلى قيم JavaScript (true/false)
+      const convertPostgresBooleanToJs = (value: any): boolean | null => {
+        if (value === 't') return true;
+        if (value === 'f') return false;
+        if (value === true || value === false) return value;
+        return null;
+      };
+      
+      // Create a settings object with required fields from the schema
+      // Adding null/default values for missing columns
+      const settings: any = {
+        id: dbSettings.id,
+        siteName: dbSettings.site_name,
+        siteTagline: dbSettings.site_tagline || null,
+        siteDescription: dbSettings.site_description || null,
+        favicon: dbSettings.favicon || null,
+        logo: dbSettings.logo || null,
+        logoDark: dbSettings.logo_dark || null,
+        email: dbSettings.email || null,
+        phone: dbSettings.phone || null,
+        whatsapp: dbSettings.whatsapp || null,
+        address: dbSettings.address || null,
+        facebook: dbSettings.facebook || null,
+        twitter: dbSettings.twitter || null,
+        instagram: dbSettings.instagram || null,
+        youtube: dbSettings.youtube || null,
+        linkedin: dbSettings.linkedin || null,
+        primaryColor: dbSettings.primary_color || null,
+        secondaryColor: dbSettings.secondary_color || null,
+        accentColor: dbSettings.accent_color || null,
+        enableDarkMode: convertPostgresBooleanToJs(dbSettings.enable_dark_mode),
+        rtlDirection: convertPostgresBooleanToJs(dbSettings.rtl_direction),
+        defaultLanguage: dbSettings.default_language || null,
+        enableNewsletter: convertPostgresBooleanToJs(dbSettings.enable_newsletter),
+        enableScholarshipSearch: convertPostgresBooleanToJs(dbSettings.enable_scholarship_search),
+        footerText: dbSettings.footer_text || null,
+        
+        // إضافة جميع حقول إظهار/إخفاء الأقسام مع تحويل قيمها البوليانية
+        showHeroSection: convertPostgresBooleanToJs(dbSettings.show_hero_section),
+        showFeaturedScholarships: convertPostgresBooleanToJs(dbSettings.show_featured_scholarships),
+        showSearchSection: convertPostgresBooleanToJs(dbSettings.show_search_section),
+        showCategoriesSection: convertPostgresBooleanToJs(dbSettings.show_categories_section),
+        showCountriesSection: convertPostgresBooleanToJs(dbSettings.show_countries_section),
+        showLatestArticles: convertPostgresBooleanToJs(dbSettings.show_latest_articles),
+        showSuccessStories: convertPostgresBooleanToJs(dbSettings.show_success_stories),
+        showNewsletterSection: convertPostgresBooleanToJs(dbSettings.show_newsletter_section),
+        showStatisticsSection: convertPostgresBooleanToJs(dbSettings.show_statistics_section),
+        showPartnersSection: convertPostgresBooleanToJs(dbSettings.show_partners_section),
+        
+        // عناوين وأوصاف الأقسام
+        heroTitle: dbSettings.hero_title || null,
+        heroDescription: dbSettings.hero_description || null,
+        featuredScholarshipsTitle: dbSettings.featured_scholarships_title || null,
+        featuredScholarshipsDescription: dbSettings.featured_scholarships_description || null,
+        categoriesSectionTitle: dbSettings.categories_section_title || null,
+        categoriesSectionDescription: dbSettings.categories_section_description || null,
+        
+        // حقول أخرى
+        customCss: dbSettings.custom_css || null
+      };
+      
+      console.log('Processed site settings:', settings);
+      
+      return settings as SiteSetting;
+    } catch (error) {
+      console.error('Error getting site settings, table might not exist:', error);
+      return undefined;
+    }
     
     // تحويل قيم البوليان من PostgreSQL ('t'/'f') إلى قيم JavaScript (true/false)
     const convertPostgresBooleanToJs = (value: any): boolean | null => {

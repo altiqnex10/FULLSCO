@@ -154,6 +154,7 @@ storage.getMenuByLocation = async (location: string): Promise<Menu | undefined> 
     const [menu] = await db.select().from(menus).where(eq(menus.location, location));
     return menu;
   } catch (error) {
+    // إذا كان هناك خطأ بسبب عدم وجود جدول، نعيد `undefined` بدلاً من رمي خطأ
     console.error("Error getting menu by location:", error);
     return undefined;
   }
@@ -194,7 +195,8 @@ storage.getMenuStructure = async (location: string): Promise<any> => {
     
     return structure;
   } catch (error) {
+    // إذا كان هناك خطأ بسبب عدم وجود جدول، نعيد null بدلاً من رمي خطأ
     console.error(`Error getting menu structure for ${location}:`, error);
-    throw error; // Throw the error to be handled in API route
+    return null; // Return null instead of throwing error
   }
 };
