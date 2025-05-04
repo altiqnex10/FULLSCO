@@ -749,10 +749,24 @@ export class DatabaseStorage implements IStorage {
       console.log('DB settings raw from PostgreSQL:', dbSettings);
       
       // تحويل قيم البوليان من PostgreSQL ('t'/'f') إلى قيم JavaScript (true/false)
+      // تحسين دالة تحويل القيم البوليانية من PostgreSQL إلى جافاسكربت
       const convertPostgresBooleanToJs = (value: any): boolean | null => {
-        if (value === 't') return true;
-        if (value === 'f') return false;
-        if (value === true || value === false) return value;
+        // سجل القيمة المستلمة ونوعها للتشخيص
+        console.log(`Converting boolean value: ${value}, type: ${typeof value}`);
+        
+        // التحقق من القيم النصية الممثلة للبوليان
+        if (value === 't' || value === 'true' || value === true || value === 1 || value === '1') {
+          console.log(`  -> converted to TRUE`);
+          return true;
+        }
+        
+        if (value === 'f' || value === 'false' || value === false || value === 0 || value === '0') {
+          console.log(`  -> converted to FALSE`);
+          return false;
+        }
+        
+        // إذا كانت القيمة ليست محددة أو null
+        console.log(`  -> no match, returning null`);
         return null;
       };
       
@@ -818,10 +832,24 @@ export class DatabaseStorage implements IStorage {
     }
     
     // تحويل قيم البوليان من PostgreSQL ('t'/'f') إلى قيم JavaScript (true/false)
+    // تحسين دالة تحويل القيم البوليانية من PostgreSQL إلى جافاسكربت
     const convertPostgresBooleanToJs = (value: any): boolean | null => {
-      if (value === 't') return true;
-      if (value === 'f') return false;
-      if (value === true || value === false) return value;
+      // سجل القيمة المستلمة ونوعها للتشخيص
+      console.log(`Converting boolean value: ${value}, type: ${typeof value}`);
+      
+      // التحقق من القيم النصية الممثلة للبوليان
+      if (value === 't' || value === 'true' || value === true || value === 1 || value === '1') {
+        console.log(`  -> converted to TRUE`);
+        return true;
+      }
+      
+      if (value === 'f' || value === 'false' || value === false || value === 0 || value === '0') {
+        console.log(`  -> converted to FALSE`);
+        return false;
+      }
+      
+      // إذا كانت القيمة ليست محددة أو null
+      console.log(`  -> no match, returning null`);
       return null;
     };
     
