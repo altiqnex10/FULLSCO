@@ -991,9 +991,15 @@ export class DatabaseStorage implements IStorage {
           console.log(`Updating settings with: ${settingsObj}`);
           
           // استخدام أسلوب تحديث صريح
-          await db.update(siteSettings)
-            .set(validDbSettings)
-            .where(eq(siteSettings.id, existingSettings.id));
+          // السبب في المشكلة: يجب استخدام الطريقة الصحيحة للتحديث في drizzle
+          await pool.query(
+            `UPDATE site_settings SET 
+            ${Object.entries(validDbSettings)
+              .map(([key, value]) => `${key} = $${Object.keys(validDbSettings).indexOf(key) + 1}`)
+              .join(', ')} 
+            WHERE id = ${existingSettings.id}`,
+            Object.values(validDbSettings)
+          );
           
           console.log("DB storage: site settings updated successfully");
         } else {
