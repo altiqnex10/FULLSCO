@@ -3,25 +3,29 @@ import { db } from '../../../db';
 import { scholarships, categories, levels, countries } from '../../../shared/schema';
 import { eq } from 'drizzle-orm';
 
+/**
+ * التعامل مع طلبات الحصول على المنحة بواسطة معرف رقمي بشكل صريح
+ * نستخدم الطريقة ?scholarshipId=123 بدلاً من [id] لتجنب التعارض مع [slug]
+ */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { id } = req.query;
+    const { scholarshipId } = req.query;
     
     // التأكد من أن المعرف صالح
-    if (!id || Array.isArray(id)) {
+    if (!scholarshipId || Array.isArray(scholarshipId)) {
       return res.status(400).json({ error: 'Invalid scholarship ID' });
     }
     
-    const scholarshipId = parseInt(id);
+    const id = parseInt(scholarshipId);
     
-    if (isNaN(scholarshipId)) {
+    if (isNaN(id)) {
       return res.status(400).json({ error: 'Invalid scholarship ID format' });
     }
     
     if (req.method === 'GET') {
       // الحصول على المنحة بواسطة المعرف
       const scholarship = await db.query.scholarships.findFirst({
-        where: eq(scholarships.id, scholarshipId)
+        where: eq(scholarships.id, id)
       });
       
       if (!scholarship) {
@@ -49,16 +53,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       // إرجاع المنحة مع بيانات العلاقات
       return res.status(200).json({
-        ...scholarship,
-        category,
-        level,
-        country
+        success: true,
+        scholarship: {
+          ...scholarship,
+          category,
+          level,
+          country
+        }
       });
     } else {
       return res.status(405).json({ error: 'Method not allowed' });
     }
   } catch (error) {
     console.error('Error fetching scholarship:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ 
+      success: false,
+      message: 'حدث خطأ أثناء جلب تفاصيل المنحة الدراسية',
+      error: error instanceof Error ? error.message : 'خطأ غير معروف'
+    });
   }
 }

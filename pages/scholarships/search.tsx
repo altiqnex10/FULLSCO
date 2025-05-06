@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { GetServerSideProps } from 'next';
+import { useRouter } from 'next/router';
 import Head from 'next/head';
 import MainLayout from '@/components/layout/MainLayout';
 import { SearchForm } from '@/components/search/SearchForm';
 import { FilterComponent } from '@/components/search/FilterComponent';
 import { ScholarshipCard } from '@/components/scholarships/ScholarshipCard';
 import { Pagination } from '@/components/ui/Pagination';
-import { GraduationCap, Filter, X, Search } from 'lucide-react';
+import { Search, Filter, X } from 'lucide-react';
 import { useSiteSettings } from '@/contexts/site-settings-context';
 
 // تعريف واجهة بيانات المنحة الدراسية
@@ -36,7 +37,8 @@ interface FilterOptions {
 }
 
 // تعريف واجهة خصائص الصفحة
-interface ScholarshipsPageProps {
+interface ScholarshipSearchPageProps {
+  initialSearchQuery: string;
   scholarships: ScholarshipData[];
   filterOptions: FilterOptions;
   pagination: {
@@ -46,7 +48,6 @@ interface ScholarshipsPageProps {
     totalPages: number;
   };
   initialFilters: {
-    search?: string;
     category?: string;
     country?: string;
     level?: string;
@@ -55,32 +56,40 @@ interface ScholarshipsPageProps {
   };
 }
 
-// مكون صفحة المنح الدراسية
-export default function ScholarshipsPage({
+// مكون صفحة البحث عن المنح الدراسية
+export default function ScholarshipSearchPage({
+  initialSearchQuery,
   scholarships,
   filterOptions,
   pagination,
   initialFilters
-}: ScholarshipsPageProps) {
+}: ScholarshipSearchPageProps) {
+  const router = useRouter();
   const { siteSettings } = useSiteSettings();
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
   
   // عنوان الصفحة
-  const title = initialFilters.search
-    ? `نتائج البحث عن: ${initialFilters.search} | ${siteSettings?.siteName || 'FULLSCO'}`
-    : initialFilters.category
-    ? `منح ${filterOptions.categories.find(c => c.slug === initialFilters.category)?.name || ''} | ${siteSettings?.siteName || 'FULLSCO'}`
-    : initialFilters.country
-    ? `منح دراسية في ${filterOptions.countries.find(c => c.slug === initialFilters.country)?.name || ''} | ${siteSettings?.siteName || 'FULLSCO'}`
-    : initialFilters.level
-    ? `منح ${filterOptions.levels.find(l => l.slug === initialFilters.level)?.name || ''} | ${siteSettings?.siteName || 'FULLSCO'}`
-    : `المنح الدراسية | ${siteSettings?.siteName || 'FULLSCO'}`;
+  const title = `نتائج البحث عن: ${searchQuery} | ${siteSettings?.siteName || 'FULLSCO'}`;
   
-  // بناء وصف الصفحة
-  const description = initialFilters.search
-    ? `نتائج البحث عن "${initialFilters.search}" في المنح الدراسية. اكتشف أفضل الفرص التعليمية المتاحة.`
-    : 'اكتشف أحدث المنح الدراسية حول العالم. فرص تعليمية متنوعة للطلاب من مختلف التخصصات والمستويات الدراسية.';
+  // وصف الصفحة
+  const description = `نتائج البحث عن "${searchQuery}" في المنح الدراسية. اكتشف أفضل الفرص التعليمية المتاحة.`;
   
+  // معالجة البحث
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      router.push({
+        pathname: '/scholarships/search',
+        query: { 
+          ...router.query,
+          q: query,
+          page: 1 
+        }
+      });
+    }
+  };
+  
+  // تبديل عرض الفلاتر للأجهزة المحمولة
   const toggleFilters = () => {
     setIsFiltersVisible(!isFiltersVisible);
   };
@@ -89,37 +98,26 @@ export default function ScholarshipsPage({
     <MainLayout title={title} description={description}>
       <Head>
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_SITE_URL}/scholarships`} />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_SITE_URL}/scholarships/search?q=${searchQuery}`} />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
       </Head>
       
+      {/* رأس الصفحة */}
       <div className="bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 pt-8 pb-6 border-b border-gray-200 dark:border-gray-700">
         <div className="container">
           <div className="max-w-3xl mx-auto text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">
-              {initialFilters.search ? (
-                <>نتائج البحث عن: <span className="text-primary">{initialFilters.search}</span></>
-              ) : initialFilters.category ? (
-                <>منح <span className="text-primary">{filterOptions.categories.find(c => c.slug === initialFilters.category)?.name}</span></>
-              ) : initialFilters.country ? (
-                <>منح دراسية في <span className="text-primary">{filterOptions.countries.find(c => c.slug === initialFilters.country)?.name}</span></>
-              ) : initialFilters.level ? (
-                <>منح <span className="text-primary">{filterOptions.levels.find(l => l.slug === initialFilters.level)?.name}</span></>
-              ) : (
-                'استكشف المنح الدراسية'
-              )}
+              نتائج البحث عن: <span className="text-primary">{searchQuery}</span>
             </h1>
             
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              {initialFilters.search
-                ? `وجدنا ${pagination.total} نتيجة تطابق بحثك. استخدم أدوات التصفية لتحسين النتائج.`
-                : 'اكتشف أحدث المنح الدراسية المتاحة عالمياً واعثر على الفرصة المناسبة لك.'
-              }
+              وجدنا {pagination.total} نتيجة تطابق بحثك. استخدم أدوات التصفية لتحسين النتائج.
             </p>
             
             <SearchForm 
-              defaultQuery={initialFilters.search || ''}
+              defaultQuery={searchQuery}
+              onSearch={handleSearch}
               isSearchPage={true}
               className="max-w-2xl mx-auto"
             />
@@ -127,11 +125,11 @@ export default function ScholarshipsPage({
         </div>
       </div>
       
+      {/* محتوى الصفحة */}
       <div className="container py-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <GraduationCap className="h-5 w-5 text-primary" />
-            {pagination.total} منحة دراسية متاحة
+          <h2 className="text-xl font-bold">
+            {pagination.total} نتيجة بحث
           </h2>
           
           <button 
@@ -166,7 +164,7 @@ export default function ScholarshipsPage({
                   country: initialFilters.country,
                   level: initialFilters.level,
                   fundingType: initialFilters.fundingType,
-                  sortBy: initialFilters.sortBy || 'newest'
+                  sortBy: initialFilters.sortBy || 'relevance'
                 }}
               />
             </div>
@@ -196,10 +194,10 @@ export default function ScholarshipsPage({
                 </div>
                 <h3 className="text-lg font-bold mb-2">لم يتم العثور على نتائج</h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  لا توجد منح دراسية تطابق معايير البحث. حاول تغيير معايير التصفية أو البحث.
+                  لا توجد منح دراسية تطابق كلمات البحث "{searchQuery}". حاول استخدام كلمات مفتاحية أخرى أو تغيير معايير البحث.
                 </p>
                 <button
-                  onClick={() => window.location.href = '/scholarships'}
+                  onClick={() => router.push('/scholarships')}
                   className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
                 >
                   عرض جميع المنح
@@ -216,22 +214,32 @@ export default function ScholarshipsPage({
 // جلب البيانات من الخادم
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   try {
+    const searchQuery = query.q as string;
+    
+    if (!searchQuery || searchQuery.trim() === '') {
+      return {
+        redirect: {
+          destination: '/scholarships',
+          permanent: false,
+        },
+      };
+    }
+    
     const page = query.page ? parseInt(query.page as string) : 1;
     const limit = query.limit ? parseInt(query.limit as string) : 10;
-    const search = query.search as string | undefined;
     const category = query.category as string | undefined;
     const country = query.country as string | undefined;
     const level = query.level as string | undefined;
     const fundingType = query.fundingType as string | undefined;
-    const sortBy = query.sortBy as string | undefined;
+    const sortBy = query.sortBy as string | undefined || 'relevance';
     
     // بناء استعلام API
     const apiUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/scholarships`;
     const queryParams = new URLSearchParams();
     
+    queryParams.append('search', searchQuery);
     if (page) queryParams.append('page', page.toString());
     if (limit) queryParams.append('limit', limit.toString());
-    if (search) queryParams.append('search', search);
     if (category) queryParams.append('category', category);
     if (country) queryParams.append('country', country);
     if (level) queryParams.append('level', level);
@@ -244,7 +252,7 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const response = await fetch(apiUrlWithParams);
     
     if (!response.ok) {
-      throw new Error(`حدث خطأ أثناء جلب المنح الدراسية: ${response.status}`);
+      throw new Error(`حدث خطأ أثناء جلب نتائج البحث: ${response.status}`);
     }
     
     const data = await response.json();
@@ -252,6 +260,7 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     // معالجة البيانات
     return {
       props: {
+        initialSearchQuery: searchQuery,
         scholarships: data.scholarships || [],
         filterOptions: data.meta.filters || {
           categories: [],
@@ -265,7 +274,6 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
           totalPages: 0
         },
         initialFilters: {
-          search,
           category,
           country,
           level,
@@ -275,11 +283,12 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
       }
     };
   } catch (error) {
-    console.error('Error fetching scholarships:', error);
+    console.error('Error fetching search results:', error);
     
     // إرجاع بيانات فارغة في حالة الخطأ
     return {
       props: {
+        initialSearchQuery: query.q || '',
         scholarships: [],
         filterOptions: {
           categories: [],

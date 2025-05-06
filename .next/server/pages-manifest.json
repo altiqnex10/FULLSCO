@@ -2,8 +2,6 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/scholarships": "pages/scholarships.js",
   "/": "pages/index.js",
-  "/scholarships/[slug]": "pages/scholarships/[slug].js",
   "/api/site-settings": "pages/api/site-settings.js"
 }
