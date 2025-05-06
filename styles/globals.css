@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 17, 24, 39;
+  --background-rgb: 255, 255, 255;
+  --primary: 59, 130, 246;
+  --primary-light: 96, 165, 250;
+  --primary-dark: 37, 99, 235;
+  --secondary: 107, 114, 128;
+  --secondary-light: 156, 163, 175;
+  --secondary-dark: 75, 85, 99;
+}
+
+[data-theme='dark'] {
+  --foreground-rgb: 249, 250, 251;
+  --background-rgb: 31, 41, 55;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary hover:bg-primary-dark text-white font-semibold py-2 px-4 rounded transition-colors;
+  }
+  .btn-secondary {
+    @apply bg-secondary hover:bg-secondary-dark text-white font-semibold py-2 px-4 rounded transition-colors;
+  }
+  .btn-outline {
+    @apply border border-primary text-primary hover:bg-primary hover:text-white font-semibold py-2 px-4 rounded transition-colors;
+  }
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-6;
+  }
+  .input {
+    @apply rounded-md border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary px-4 py-2 outline-none;
+  }
+  .label {
+    @apply text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
+  }
+}
