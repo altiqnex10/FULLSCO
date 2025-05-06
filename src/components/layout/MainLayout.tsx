@@ -29,12 +29,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         <link rel="icon" href={siteSettings.faviconUrl} />
       </Head>
       
-      <header className="bg-white shadow-sm">
+      <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="font-bold text-2xl text-blue-600">
             {siteSettings.siteName}
           </div>
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden md:flex gap-8">
             <a href="#" className="text-gray-700 hover:text-blue-600">الرئيسية</a>
             <a href="#" className="text-gray-700 hover:text-blue-600">المنح الدراسية</a>
             <a href="#" className="text-gray-700 hover:text-blue-600">الدول</a>
@@ -42,7 +42,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             <a href="#" className="text-gray-700 hover:text-blue-600">قصص النجاح</a>
             <a href="#" className="text-gray-700 hover:text-blue-600">تواصل معنا</a>
           </nav>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-4">
             <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50">
               تسجيل الدخول
             </button>
@@ -51,7 +51,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             </button>
           </div>
         </div>
-      </header>
+      </div>
       
       <main>
         {children}
@@ -85,7 +85,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             </div>
             <div>
               <h4 className="text-lg font-semibold mb-4">التواصل الاجتماعي</h4>
-              <div className="flex space-x-4">
+              <div className="flex gap-4">
                 <a href={siteSettings.socialMedia.facebook} className="text-gray-400 hover:text-white">
                   <span className="sr-only">Facebook</span>
                   <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
