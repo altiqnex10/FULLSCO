@@ -9,8 +9,20 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// إنشاء عميل postgres
-const client = postgres(process.env.DATABASE_URL);
+// إنشاء عميل postgres مع إعدادات مخصصة
+const client = postgres(process.env.DATABASE_URL, { 
+  max: 10, // عدد الاتصالات المتزامنة المسموح بها
+  idle_timeout: 20, // زمن انتهاء الاتصال الغير مستخدم
+  connect_timeout: 10, // زمن انتهاء محاولة الاتصال
+});
 
-// إنشاء كائن drizzle
-export const db = drizzle(client, { schema });
+// إنشاء كائن drizzle مع تكوين السجلات
+export const db = drizzle(client, { 
+  schema,
+  logger: {
+    logQuery: process.env.NODE_ENV === 'development' ? (query, params) => {
+      console.log('SQL Query:', query);
+      console.log('Params:', params);
+    } : undefined
+  }
+});
