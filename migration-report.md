@@ -6,7 +6,7 @@
 
 ## ملخص التقدم
 
-- **نسبة الترحيل الإجمالية**: 12% (الصفحات الأساسية والهيكل الرئيسي)
+- **نسبة الترحيل الإجمالية**: 19% (الصفحات الأساسية والمكونات الرئيسية)
 - **تاريخ بدء الترحيل**: 6 مايو 2025
 - **التاريخ المتوقع للانتهاء**: 30 يونيو 2025
 
@@ -129,10 +129,10 @@
 | تذييل الصفحة | `components/layout/Footer.tsx` | ✅ تم | |
 | سياق إعدادات الموقع | `contexts/site-settings-context.tsx` | ✅ تم | |
 | API لجلب إعدادات الموقع | `pages/api/site-settings.ts` | ✅ تم | |
-| عنصر كارت المنحة | `components/scholarships/ScholarshipCard.tsx` | ❌ لم يبدأ | |
-| نموذج البحث | `components/search/SearchForm.tsx` | ❌ لم يبدأ | |
-| عنصر التصفية | `components/search/FilterComponent.tsx` | ❌ لم يبدأ | |
-| عنصر الترقيم | `components/ui/Pagination.tsx` | ❌ لم يبدأ | |
+| عنصر كارت المنحة | `components/scholarships/ScholarshipCard.tsx` | ✅ تم | |
+| نموذج البحث | `components/search/SearchForm.tsx` | ✅ تم | |
+| عنصر التصفية | `components/search/FilterComponent.tsx` | ✅ تم | |
+| عنصر الترقيم | `components/ui/Pagination.tsx` | ✅ تم | |
 
 ---
 
