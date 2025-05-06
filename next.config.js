@@ -2,24 +2,20 @@
 
 const nextConfig = {
   reactStrictMode: true,
-  // Allow cross-origin requests in development mode (for Replit environment)
-  allowedDevOrigins: [
-    /^https:\/\/.*\.replit\.dev$/,
-    /^https:\/\/.*\.repl\.co$/,
-    /^https:\/\/.*-.*\.spock\.replit\.dev$/,
-  ],
   // Configure image domains if needed
   images: {
     domains: ['localhost', '0.0.0.0'],
   },
-  // Include RTL CSS direction for Arabic content
-  i18n: {
-    locales: ['ar', 'en'],
-    defaultLocale: 'ar',
-    // This is a required field for RTL support
-    // The site will be RTL for Arabic and LTR for English
-    localeDetection: true,
+  // Set up proper cross-origin configuration
+  experimental: {
+    allowedDomainsWhitelist: [
+      '*.replit.dev',
+      '*.repl.co',
+      '*.spock.replit.dev'
+    ]
   },
+  // Using the dir attribute in _document.tsx for RTL instead
+  // since i18n config is not supported in App Router
 };
 
 module.exports = nextConfig;
