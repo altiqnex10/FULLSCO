@@ -19,10 +19,4 @@ const client = postgres(process.env.DATABASE_URL, {
 // إنشاء كائن drizzle مع تكوين السجلات
 export const db = drizzle(client, { 
   schema,
-  logger: {
-    logQuery: process.env.NODE_ENV === 'development' ? (query, params) => {
-      console.log('SQL Query:', query);
-      console.log('Params:', params);
-    } : undefined
-  }
 });
