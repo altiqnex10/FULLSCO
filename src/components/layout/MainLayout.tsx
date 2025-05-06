@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useSiteSettings } from '../../contexts/SiteSettingsContext';
 
@@ -14,12 +14,21 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   description,
 }) => {
   const { siteSettings } = useSiteSettings();
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   
   const pageTitle = title 
     ? `${title} | ${siteSettings.siteName}`
     : siteSettings.siteName;
     
   const pageDescription = description || siteSettings.siteDescription;
+  
+  if (!isMounted) {
+    return null; // Return null on server-side to prevent hydration mismatch
+  }
 
   return (
     <>
