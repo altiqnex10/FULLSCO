@@ -1,74 +1,63 @@
-import React, { ReactNode } from 'react';
-import { Inter, Tajawal } from 'next/font/google';
-import { useSiteSettings } from '../../contexts/site-settings-context';
+import { ReactNode } from 'react';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
 import Header from './Header';
 import Footer from './Footer';
-import Head from 'next/head';
-
-// تحميل الخطوط
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-});
-
-const tajawal = Tajawal({
-  subsets: ['arabic'],
-  weight: ['400', '500', '700'],
-  display: 'swap',
-  variable: '--font-tajawal',
-});
+import { useSiteSettings } from '@/contexts/site-settings-context';
 
 interface MainLayoutProps {
   children: ReactNode;
   title?: string;
   description?: string;
+  hideFooter?: boolean;
 }
 
 export default function MainLayout({
   children,
   title,
   description,
+  hideFooter = false
 }: MainLayoutProps) {
-  const { siteSettings, isLoading } = useSiteSettings();
-
-  // استخدام قيم من إعدادات الموقع إذا كانت متاحة
-  const pageTitle = title 
-    ? `${title} | ${siteSettings?.siteName || 'FULLSCO'}`
-    : siteSettings?.siteName || 'FULLSCO - منصة المنح الدراسية';
-    
-  const pageDescription = description || siteSettings?.siteDescription || 'منصة المنح الدراسية للطلاب العرب';
+  const router = useRouter();
+  const { siteSettings } = useSiteSettings();
   
-  // تحديد اتجاه الصفحة (RTL للعربية)
-  const isRTL = siteSettings?.theme?.rtlDirection !== false;
+  // تنسيق العنوان
+  const formattedTitle = title 
+    ? `${title} | ${siteSettings?.siteName || 'FULLSCO'}`
+    : siteSettings?.siteName || 'FULLSCO';
+  
+  // تنسيق الوصف
+  const formattedDescription = description || siteSettings?.siteDescription || 'منصة المنح الدراسية والفرص التعليمية';
+  
+  // التحقق من الاتجاه
+  const isRtl = router.locale === 'ar' || router.defaultLocale === 'ar';
   
   return (
-    <>
+    <div dir={isRtl ? 'rtl' : 'ltr'} className={isRtl ? 'font-tajawal' : 'font-inter'}>
       <Head>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDescription} />
+        <title>{formattedTitle}</title>
+        <meta name="description" content={formattedDescription} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href={siteSettings?.faviconUrl || '/favicon.ico'} />
-        
-        {/* Open Graph / Social Media Meta Tags */}
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={pageDescription} />
+        <meta property="og:title" content={formattedTitle} />
+        <meta property="og:description" content={formattedDescription} />
         <meta property="og:type" content="website" />
-        <meta property="og:site_name" content={siteSettings?.siteName || 'FULLSCO'} />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_SITE_URL || ''}${router.asPath}`} />
+        <meta property="og:locale" content={isRtl ? 'ar_SA' : 'en_US'} />
+        {siteSettings?.logoUrl && (
+          <meta property="og:image" content={siteSettings.logoUrl} />
+        )}
       </Head>
       
-      <div
-        className={`flex min-h-screen flex-col ${inter.variable} ${tajawal.variable}`}
-        dir={isRTL ? 'rtl' : 'ltr'}
-      >
+      <div className="flex flex-col min-h-screen">
         <Header />
         
         <main className="flex-grow">
-          {!isLoading && children}
+          {children}
         </main>
         
-        <Footer />
+        {!hideFooter && <Footer />}
       </div>
-    </>
+    </div>
   );
 }
