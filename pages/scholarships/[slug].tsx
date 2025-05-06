@@ -463,8 +463,12 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
       };
     }
     
-    // استدعاء API لجلب تفاصيل المنحة
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/scholarships/${slug}`);
+    // استدعاء API لجلب تفاصيل المنحة 
+    // استخدام كائن URL بدلاً من التسلسل المباشر، مع ضمان التعامل السليم مع الأحرف العربية
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+    const apiUrl = new URL('/api/scholarships/by-slug', baseUrl.startsWith('http') ? baseUrl : `http://${baseUrl}`);
+    apiUrl.searchParams.append('slug', slug);
+    const response = await fetch(apiUrl.toString());
     
     if (!response.ok) {
       throw new Error(`حدث خطأ أثناء جلب تفاصيل المنحة: ${response.status}`);
