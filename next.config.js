@@ -1,13 +1,14 @@
 /** @type {import('next').NextConfig} */
-
 const nextConfig = {
   reactStrictMode: true,
-  // Configure image domains if needed
-  images: {
-    domains: ['localhost', '0.0.0.0'],
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:5000/api/:path*',
+      }
+    ];
   },
-  // Using the dir attribute in _document.tsx for RTL instead
-  // since i18n config is not supported in App Router
-};
+}
 
 module.exports = nextConfig;
