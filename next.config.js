@@ -1,8 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
-  // دعم الخادم الخلفي Express
+  images: {
+    domains: ['localhost'],
+  },
+  // توجيه طلبات API إلى خادم Express
   async rewrites() {
     return [
       {

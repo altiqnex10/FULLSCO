@@ -3,43 +3,110 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 17, 24, 39;
-  --background-rgb: 255, 255, 255;
-  --primary: 59, 130, 246;
-  --primary-light: 96, 165, 250;
-  --primary-dark: 37, 99, 235;
-  --secondary: 107, 114, 128;
-  --secondary-light: 156, 163, 175;
-  --secondary-dark: 75, 85, 99;
+  --primary: #3b82f6;
+  --primary-light: #60a5fa;
+  --primary-dark: #2563eb;
+  --secondary: #8b5cf6;
+  --secondary-light: #a78bfa;
+  --secondary-dark: #7c3aed;
+  --accent: #f59e0b;
+  --accent-light: #fbbf24;
+  --accent-dark: #d97706;
+  --text-dark: #1f2937;
+  --text-light: #6b7280;
+  --bg-light: #f9fafb;
+  --bg-dark: #111827;
+  --border-light: #e5e7eb;
+  --border-dark: #374151;
 }
 
-[data-theme='dark'] {
-  --foreground-rgb: 249, 250, 251;
-  --background-rgb: 31, 41, 55;
-}
-
-body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
+@layer base {
+  html {
+    direction: rtl;
+    @apply text-right;
+  }
+  
+  body {
+    @apply bg-bg-light text-text-dark font-sans;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+  }
+  
+  h1 {
+    @apply text-4xl leading-tight;
+  }
+  
+  h2 {
+    @apply text-3xl leading-tight;
+  }
+  
+  h3 {
+    @apply text-2xl leading-tight;
+  }
+  
+  h4 {
+    @apply text-xl leading-snug;
+  }
+  
+  button, .button {
+    @apply bg-primary text-white px-4 py-2 rounded transition-colors;
+  }
+  
+  button:hover, .button:hover {
+    @apply bg-primary-dark;
+  }
+  
+  button:focus, .button:focus {
+    @apply outline-none ring-2 ring-primary-light ring-opacity-50;
+  }
+  
+  a {
+    @apply text-primary hover:text-primary-dark transition-colors;
+  }
 }
 
 @layer components {
-  .btn-primary {
-    @apply bg-primary hover:bg-primary-dark text-white font-semibold py-2 px-4 rounded transition-colors;
+  .container {
+    @apply mx-auto px-4;
   }
-  .btn-secondary {
-    @apply bg-secondary hover:bg-secondary-dark text-white font-semibold py-2 px-4 rounded transition-colors;
-  }
-  .btn-outline {
-    @apply border border-primary text-primary hover:bg-primary hover:text-white font-semibold py-2 px-4 rounded transition-colors;
-  }
+  
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-6;
+    @apply bg-white rounded-lg shadow p-6;
   }
+  
+  .badge {
+    @apply px-2 py-1 rounded-full text-xs font-medium;
+  }
+  
+  .badge-primary {
+    @apply bg-primary-light text-white;
+  }
+  
+  .badge-secondary {
+    @apply bg-secondary-light text-white;
+  }
+  
+  .badge-accent {
+    @apply bg-accent-light text-white;
+  }
+  
   .input {
-    @apply rounded-md border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary px-4 py-2 outline-none;
+    @apply w-full px-4 py-2 border border-border-light rounded-md focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent;
   }
-  .label {
-    @apply text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
+  
+  .button-primary {
+    @apply bg-primary hover:bg-primary-dark;
+  }
+  
+  .button-secondary {
+    @apply bg-secondary hover:bg-secondary-dark;
+  }
+  
+  .button-accent {
+    @apply bg-accent hover:bg-accent-dark;
   }
 }
+
+/* Dark mode styles will be added later */

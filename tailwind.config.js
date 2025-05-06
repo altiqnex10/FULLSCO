@@ -4,28 +4,38 @@ module.exports = {
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   darkMode: ["class"],
   theme: {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#3b82f6',
-          light: '#60a5fa',
-          dark: '#2563eb',
+          DEFAULT: 'var(--primary)',
+          light: 'var(--primary-light)',
+          dark: 'var(--primary-dark)',
         },
         secondary: {
-          DEFAULT: '#6b7280',
-          light: '#9ca3af',
-          dark: '#4b5563',
+          DEFAULT: 'var(--secondary)',
+          light: 'var(--secondary-light)',
+          dark: 'var(--secondary-dark)',
         },
-        background: {
-          light: '#ffffff',
-          dark: '#1f2937',
+        accent: {
+          DEFAULT: 'var(--accent)',
+          light: 'var(--accent-light)',
+          dark: 'var(--accent-dark)',
         },
         text: {
-          light: '#111827',
-          dark: '#f9fafb',
+          dark: 'var(--text-dark)',
+          light: 'var(--text-light)',
+        },
+        bg: {
+          light: 'var(--bg-light)',
+          dark: 'var(--bg-dark)',
+        },
+        border: {
+          light: 'var(--border-light)',
+          dark: 'var(--border-dark)',
         }
       },
       fontFamily: {

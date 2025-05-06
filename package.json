@@ -334,7 +334,8 @@
     "zod-validation-error": "^3.4.1"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node dev.js"
   },
   "keywords": [],
   "author": "",
