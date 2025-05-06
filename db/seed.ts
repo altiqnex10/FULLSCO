@@ -21,7 +21,8 @@ async function seed() {
       
       // إنشاء المستخدم الإداري
       const adminData = {
-        name: 'مسؤول النظام',
+        username: 'admin',
+        fullName: 'مسؤول النظام',
         email: 'admin@example.com',
         password: hashedPassword,
         role: 'admin',
