@@ -18,7 +18,6 @@ globalThis.__BUILD_MANIFEST = {
     "/_app": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/css/pages/_app.css",
       "static/chunks/pages/_app.js"
     ],
     "/_error": [

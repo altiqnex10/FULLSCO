@@ -1,112 +1,56 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
 :root {
   --primary: #3b82f6;
-  --primary-light: #60a5fa;
   --primary-dark: #2563eb;
   --secondary: #8b5cf6;
-  --secondary-light: #a78bfa;
   --secondary-dark: #7c3aed;
   --accent: #f59e0b;
-  --accent-light: #fbbf24;
   --accent-dark: #d97706;
+  --text-light: #f9fafb;
   --text-dark: #1f2937;
-  --text-light: #6b7280;
-  --bg-light: #f9fafb;
-  --bg-dark: #111827;
-  --border-light: #e5e7eb;
-  --border-dark: #374151;
+  --background-light: #f9fafb;
+  --background-dark: #111827;
 }
 
-@layer base {
-  html {
-    direction: rtl;
-    @apply text-right;
-  }
-  
-  body {
-    @apply bg-bg-light text-text-dark font-sans;
-  }
-  
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-bold;
-  }
-  
-  h1 {
-    @apply text-4xl leading-tight;
-  }
-  
-  h2 {
-    @apply text-3xl leading-tight;
-  }
-  
-  h3 {
-    @apply text-2xl leading-tight;
-  }
-  
-  h4 {
-    @apply text-xl leading-snug;
-  }
-  
-  button, .button {
-    @apply bg-primary text-white px-4 py-2 rounded transition-colors;
-  }
-  
-  button:hover, .button:hover {
-    @apply bg-primary-dark;
-  }
-  
-  button:focus, .button:focus {
-    @apply outline-none ring-2 ring-primary-light ring-opacity-50;
-  }
-  
-  a {
-    @apply text-primary hover:text-primary-dark transition-colors;
-  }
+html {
+  direction: rtl;  /* Right-to-left for Arabic content */
 }
 
-@layer components {
-  .container {
-    @apply mx-auto px-4;
-  }
-  
-  .card {
-    @apply bg-white rounded-lg shadow p-6;
-  }
-  
-  .badge {
-    @apply px-2 py-1 rounded-full text-xs font-medium;
-  }
-  
-  .badge-primary {
-    @apply bg-primary-light text-white;
-  }
-  
-  .badge-secondary {
-    @apply bg-secondary-light text-white;
-  }
-  
-  .badge-accent {
-    @apply bg-accent-light text-white;
-  }
-  
-  .input {
-    @apply w-full px-4 py-2 border border-border-light rounded-md focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent;
-  }
-  
-  .button-primary {
-    @apply bg-primary hover:bg-primary-dark;
-  }
-  
-  .button-secondary {
-    @apply bg-secondary hover:bg-secondary-dark;
-  }
-  
-  .button-accent {
-    @apply bg-accent hover:bg-accent-dark;
-  }
+body {
+  font-family: 'Tajawal', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  color: var(--text-dark);
+  background-color: var(--background-light);
 }
 
-/* Dark mode styles will be added later */
+/* Dark mode styles */
+.dark {
+  color: var(--text-light);
+  background-color: var(--background-dark);
+}
+
+/* Custom gradient text */
+.gradient-text {
+  @apply text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600;
+}
+
+/* Custom button styles */
+.btn-primary {
+  @apply px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors;
+}
+
+.btn-secondary {
+  @apply px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg border border-blue-600 hover:bg-blue-50 transition-colors;
+}
+
+/* Card styles */
+.card {
+  @apply bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow;
+}
+
+.dark .card {
+  @apply bg-gray-800 shadow-gray-900/40;
+}
