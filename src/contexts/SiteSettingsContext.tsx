@@ -96,8 +96,8 @@ export const SiteSettingsProvider: React.FC<{ children: ReactNode }> = ({ childr
       }
     };
 
-    // Uncomment this when the API is ready
-    // fetchSiteSettings();
+    // الآن قمنا بإنشاء نقطة الـ API، سنقوم بتفعيل جلب الإعدادات
+    fetchSiteSettings();
   }, []);
 
   // Update site settings
