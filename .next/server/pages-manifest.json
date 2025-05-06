@@ -3,5 +3,7 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
-  "/api/site-settings": "pages/api/site-settings.js"
+  "/scholarships/[slug]": "pages/scholarships/[slug].js",
+  "/api/site-settings": "pages/api/site-settings.js",
+  "/scholarships": "pages/scholarships.js"
 }
