@@ -1,79 +1,69 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { db } from '../../db';
-import { siteSettings } from '../../shared/schema';
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { db } from '@/db';
+import { siteSettings } from '@/shared/schema';
 import { eq } from 'drizzle-orm';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    if (req.method === 'GET') {
-      // الحصول على إعدادات الموقع
-      // في هذه الحالة نفترض أن لدينا سجل واحد فقط (id=1) في جدول إعدادات الموقع
-      const settings = await db.query.siteSettings.findFirst({
-        where: eq(siteSettings.id, 1)
+    // الحصول على إعدادات الموقع من قاعدة البيانات
+    const siteSettingsData = await db.select().from(siteSettings).limit(1);
+    
+    if (siteSettingsData && siteSettingsData.length > 0) {
+      // إعادة الإعدادات إذا تم العثور عليها
+      return res.status(200).json({
+        success: true,
+        settings: siteSettingsData[0]
       });
-
-      if (!settings) {
-        return res.status(404).json({ error: 'Site settings not found' });
-      }
-
-      // إعادة تنسيق البيانات لتناسب واجهة SiteSettings المتوقعة في الـ context
-      const formattedSettings = {
-        siteName: settings.site_name,
-        siteDescription: settings.site_description || '',
-        siteTagline: settings.site_tagline || '',
-        siteEmail: settings.email || '',
-        sitePhone: settings.phone || '',
-        siteAddress: settings.address || '',
-        logoUrl: settings.logo || '/logo.png',
-        logoDarkUrl: settings.logo_dark || '/logo-dark.png',
-        faviconUrl: settings.favicon || '/favicon.ico',
+    } else {
+      // إعادة القيم الافتراضية إذا لم يتم العثور على إعدادات
+      const defaultSettings = {
+        siteName: 'FULLSCO',
+        siteDescription: 'منصة المنح الدراسية والفرص التعليمية',
         theme: {
-          primaryColor: settings.primary_color || '#3b82f6',
-          secondaryColor: settings.secondary_color || '#8b5cf6',
-          accentColor: settings.accent_color || '#10b981',
-          enableDarkMode: settings.enable_dark_mode || false,
-          rtlDirection: settings.rtl_direction || false,
+          primaryColor: '#3b82f6',
+          secondaryColor: '#f59e0b',
+          accentColor: '#a855f7',
+          enableDarkMode: true,
+          rtlDirection: true
         },
         socialMedia: {
-          facebook: settings.facebook || '',
-          twitter: settings.twitter || '',
-          instagram: settings.instagram || '',
-          linkedin: settings.linkedin || '',
-          youtube: settings.youtube || '',
-          whatsapp: settings.whatsapp || '',
+          facebook: 'https://facebook.com',
+          twitter: 'https://twitter.com',
+          instagram: 'https://instagram.com',
+          linkedin: 'https://linkedin.com'
         },
         layout: {
-          homePageLayout: settings.home_page_layout || 'default',
-          scholarshipPageLayout: settings.scholarship_page_layout || 'default',
-          articlePageLayout: settings.article_page_layout || 'default',
+          homePageLayout: 'default',
+          scholarshipPageLayout: 'default',
+          articlePageLayout: 'default'
         },
         sections: {
-          showHeroSection: settings.show_hero_section || true,
-          showFeaturedScholarships: settings.show_featured_scholarships || true,
-          showSearchSection: settings.show_search_section || true,
-          showCategoriesSection: settings.show_categories_section || true,
-          showCountriesSection: settings.show_countries_section || true,
-          showLatestArticles: settings.show_latest_articles || true,
-          showSuccessStories: settings.show_success_stories || true,
-          showNewsletterSection: settings.show_newsletter_section || true,
-          showStatisticsSection: settings.show_statistics_section || true,
-          showPartnersSection: settings.show_partners_section || true,
-        },
-        customCss: settings.custom_css || '',
+          showHeroSection: true,
+          showFeaturedScholarships: true,
+          showSearchSection: true,
+          showCategoriesSection: true,
+          showCountriesSection: true,
+          showLatestArticles: true,
+          showSuccessStories: true,
+          showNewsletterSection: true,
+          showStatisticsSection: true,
+          showPartnersSection: true
+        }
       };
-
-      return res.status(200).json(formattedSettings);
-    } else if (req.method === 'PUT') {
-      // تحديث إعدادات الموقع (للمسؤولين فقط)
-      // يجب إضافة التحقق من صلاحيات المستخدم هنا
       
-      // التنفيذ سيتم لاحقاً عند إضافة مصادقة المستخدم
-      return res.status(401).json({ error: 'Unauthorized' });
-    } else {
-      return res.status(405).json({ error: 'Method not allowed' });
+      return res.status(200).json({
+        success: true,
+        settings: defaultSettings
+      });
     }
   } catch (error) {
-    console.error('Error handling site settings:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('Error fetching site settings:', error);
+    
+    // إعادة رسالة خطأ في حالة فشل الطلب
+    return res.status(500).json({
+      success: false,
+      message: 'حدث خطأ أثناء جلب إعدادات الموقع',
+      error: error instanceof Error ? error.message : 'خطأ غير معروف'
+    });
   }
 }

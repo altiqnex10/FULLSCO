@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Menu, X, ChevronDown, Sun, Moon, Search } from 'lucide-react';
-import { useSiteSettings } from '@/contexts/site-settings-context';
-import { useMobile } from '@/hooks/use-mobile';
+import { useSiteSettings } from '../../contexts/site-settings-context';
+import { useMobile } from '../../hooks/use-mobile';
 
 export default function Header() {
   const { siteSettings } = useSiteSettings();

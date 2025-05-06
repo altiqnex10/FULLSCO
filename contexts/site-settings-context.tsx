@@ -1,6 +1,5 @@
-import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-// تعريف نوع بيانات إعدادات الموقع
 export interface SiteSettings {
   siteName: string;
   siteDescription: string;
@@ -47,29 +46,36 @@ export interface SiteSettings {
   customCss?: string;
 }
 
-// تعريف نوع بيانات context
 interface SiteSettingsContextType {
   siteSettings: SiteSettings | null;
   isLoading: boolean;
   error: string | null;
 }
 
-// إعدادات افتراضية
+// إنشاء سياق إعدادات الموقع
+const SiteSettingsContext = createContext<SiteSettingsContextType | undefined>(undefined);
+
+// القيم الافتراضية لإعدادات الموقع
 const defaultSiteSettings: SiteSettings = {
   siteName: 'FULLSCO',
-  siteDescription: 'منصة المنح الدراسية للطلاب العرب',
+  siteDescription: 'منصة المنح الدراسية والفرص التعليمية',
   theme: {
     primaryColor: '#3b82f6',
     secondaryColor: '#f59e0b',
     accentColor: '#a855f7',
     enableDarkMode: true,
-    rtlDirection: true,
+    rtlDirection: true
   },
-  socialMedia: {},
+  socialMedia: {
+    facebook: 'https://facebook.com',
+    twitter: 'https://twitter.com',
+    instagram: 'https://instagram.com',
+    linkedin: 'https://linkedin.com'
+  },
   layout: {
     homePageLayout: 'default',
     scholarshipPageLayout: 'default',
-    articlePageLayout: 'default',
+    articlePageLayout: 'default'
   },
   sections: {
     showHeroSection: true,
@@ -81,26 +87,18 @@ const defaultSiteSettings: SiteSettings = {
     showSuccessStories: true,
     showNewsletterSection: true,
     showStatisticsSection: true,
-    showPartnersSection: false,
-  },
+    showPartnersSection: true
+  }
 };
 
-// إنشاء context
-const SiteSettingsContext = createContext<SiteSettingsContextType>({
-  siteSettings: null,
-  isLoading: true,
-  error: null,
-});
-
-// مزود السياق
+// مزود سياق إعدادات الموقع
 export function SiteSettingsProvider({ children }: { children: ReactNode }) {
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // جلب بيانات إعدادات الموقع من API
-    const fetchSiteSettings = async () => {
+    async function fetchSiteSettings() {
       try {
         setIsLoading(true);
         const response = await fetch('/api/site-settings');
@@ -110,21 +108,24 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
         }
         
         const data = await response.json();
-        setSiteSettings({
-          ...defaultSiteSettings,
-          ...data
-        });
+        
+        if (data.settings) {
+          setSiteSettings(data.settings);
+        } else {
+          // استخدام الإعدادات الافتراضية إذا لم يتم العثور على إعدادات
+          setSiteSettings(defaultSiteSettings);
+        }
+        
         setError(null);
       } catch (err) {
         console.error('خطأ في جلب إعدادات الموقع:', err);
-        setError('حدث خطأ أثناء تحميل إعدادات الموقع');
-        
+        setError('حدث خطأ أثناء جلب إعدادات الموقع');
         // استخدام الإعدادات الافتراضية في حالة الخطأ
         setSiteSettings(defaultSiteSettings);
       } finally {
         setIsLoading(false);
       }
-    };
+    }
 
     fetchSiteSettings();
   }, []);
@@ -136,7 +137,13 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// هوك لاستخدام قيم السياق
+// Hook لاستخدام سياق إعدادات الموقع
 export function useSiteSettings() {
-  return useContext(SiteSettingsContext);
+  const context = useContext(SiteSettingsContext);
+  
+  if (context === undefined) {
+    throw new Error('يجب استخدام useSiteSettings داخل SiteSettingsProvider');
+  }
+  
+  return context;
 }

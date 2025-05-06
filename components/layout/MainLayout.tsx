@@ -3,7 +3,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Header from './Header';
 import Footer from './Footer';
-import { useSiteSettings } from '@/contexts/site-settings-context';
+import { useSiteSettings } from '../../contexts/site-settings-context';
 
 interface MainLayoutProps {
   children: ReactNode;
